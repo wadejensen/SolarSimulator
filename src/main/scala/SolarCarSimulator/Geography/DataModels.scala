@@ -34,7 +34,7 @@ case class Poi(lat: Double, long: Double, name: String)
 case class Location(
     lat: Double,
     long: Double,
-    alt: Double = 0.0,
+    alt: Double = 0.0f,
     dist: Double,
     gradient: Double,
     bearing: Double)
