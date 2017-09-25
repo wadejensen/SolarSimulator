@@ -23,8 +23,7 @@ object GeoMath {
     val locations2: Array[Pin] = gpsRoute.slice(1, gpsRoute.length)
 
     // Calculate distance between each consecutive pin
-    val lengths = (locations1, locations2).zipped
-                                          .map( pinHaversine )
+    val lengths = (locations1, locations2).zipped.map( pinHaversine )
 
     // Cumulative sum of lengths, the distance travelled for each pin
     // from race start
@@ -90,7 +89,7 @@ object GeoMath {
     */
   def gradient(y2: Double, y1: Double, dx: Double): Double = {
     val dy = y2 - y1
-    Math.atan2( dy, dx)
+    math.atan2( dy, dx)
   }
 
   /**
@@ -112,10 +111,9 @@ object GeoMath {
     val lon1: Array[Double] = longitudes.slice(0, longitudes.length - 1)
     val lon2: Array[Double] = longitudes.slice(1, longitudes.length)
 
-    val bearings = lat1 zip lon1 zip lat2 zip lon2 map {
-      case (((lat1,lon1),lat2),lon2)=> bearing(lat1,lon1,lat2,lon2)
+    val bearings: Array[Double] = for (i <- latitudes.indices.toArray) yield {
+      bearing(lat1(i), lon1(i), lat2(i), lon2(i))
     }
-
     bearings
   }
 
@@ -128,13 +126,103 @@ object GeoMath {
     * @return
     */
   def bearing(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double = {
-    val dLon = (lon2 - lon1)
+    val dLon = lon2 - lon1
 
-    val bearing = Math.atan2(
-      Math.sin(dLon) * Math.cos(lat2),
-      Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon)
+    val bearing = math.atan2(
+      math.sin(dLon) * math.cos(lat2),
+      math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dLon)
     )
     bearing
+  }
+
+  /**
+    * Find closest map marker to a checkpoint and use the marker's distance
+    * from the starting line to approximate checkpoint distance from start
+    * @param checkpoints
+    * @param gpsRoute
+    * @param distances
+    * @return Distances of each checkpoint from starting line (meters)
+    */
+  def findCheckpointDistances(checkpoints: Array[Poi],
+                              gpsRoute: Array[Pin],
+                              distances: Array[Double]): Array[Double] = {
+
+    val targetLats = checkpoints.map( pin => pin.lat)
+    val targetLons = checkpoints.map( pin => pin.long)
+
+    val latitudes = gpsRoute.map( pin => pin.lat)
+    val longitudes = gpsRoute.map( pin => pin.long)
+
+    val checkpointNearestIndices =
+      (targetLats, targetLons).zipped.map(
+        (lat, lon) => fuzzyGpsBinarySearch(lat, lon, latitudes, longitudes)
+      )
+    val checkpointDistances = checkpointNearestIndices.map( i => distances(i) )
+    checkpointDistances
+  }
+
+  /**
+    * A fuzzy search method based on binary search which takes advantage of the
+    * fact that the GPS route is largely north to south. This means we can
+    * assume it is ordered almost perfectly. First we find the closest latitude
+    * coordinate in the list to the desired lat. Then we broaden the search by
+    * a magic number (default =/- 10) and use haversine to find the closest point
+    * within that window to our desired.
+    * @param lat Latitude of the point we with to match to the route
+    * @param lon Longitude of the point we wish to match to the route
+    * @param lats Route latitudes of map markers in race order
+    * @param lons Route longitudes of map markers in race order
+    * @param tol The number of markers to test either side the closest latitude
+    *            to find overall closest GPS marker should be high enough the
+    *            span a distance of 5km either side to be safe
+    * @return
+    */
+  def fuzzyGpsBinarySearch(lat: Double,
+                           lon: Double,
+                           lats: Array[Double],
+                           lons: Array[Double],
+                           tol: Int = 10): Int = {
+
+    // Approximate the index of the nearest GPS marker in list to desired just
+    // by comparing latitude
+    val i = binarySearch(0, lats.length-1, lat, lats)
+
+    // Create a window of indices near the best guess, calculate each distance
+    val windowIndices: Array[Int] = Array.range( i - tol, i + tol  )
+    val distances: Array[Double] = windowIndices.map(
+      j => haversine( lat, lon, lats(j), lons(j) )
+    )
+
+    // Find the closest result within the window to the target
+    val (minValue, minIndex) = distances.zipWithIndex
+
+    val nearestIndex = i + minIndex
+    nearestIndex
+  }
+
+  /**
+    * A functional binary tree search for floating point numbers which finds
+    * a neighbour to the search target in the given list of doubles
+    * @param start Lower index of the array to search
+    * @param end Upper index of the array to search
+    * @param target Value being searched for in list
+    * @param list List of values to search
+    * @return Index of a neighbour to the target within list
+    *         (not guaranteed to be nearest neighbour)
+    */
+  def binarySearch(start: Int = 0,
+                   end: Int,
+                   target:Double,
+                   list: Array[Double]): Int = {
+
+    // midpoint with overflow protection
+    val mid = start + (end-start+1)/2
+    // if mid is the same as start or finish then we have found a neighbour
+    if ( mid == start || mid == end) mid
+    else if ( target > list(mid) ) binarySearch(mid, end, target, list)
+    else if ( target < list(mid) ) binarySearch(start, mid, target, list)
+    else if ( target == list(mid) ) mid
+    else -1 // You have NaNs in your list and therefore bigger problems
   }
 }
 

@@ -56,6 +56,8 @@ object StrategyEngine extends App {
   val bearings = GeoMath.findBearings(gpsRoute)
   val gradients = GeoMath.findGradients(gpsRoute)
 
+  val checkPointDistances = GeoMath.findCheckpointDistances(checkpoints, gpsRoute, distances)
+
   println(distances(distances.length-1))
   println(bearings.head)
   println(gradients.head)
