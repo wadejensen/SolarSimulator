@@ -5,13 +5,13 @@ package SolarCarSimulator.StrategyEngine
   */
 
 import SolarCarSimulator.Geography.{GeoMath, Location, Pin, Poi}
+import SolarCarSimulator.{RaceLeg, Scheduler}
 import org.joda.time.DateTime
 import org.rogach.scallop._
 import purecsv.unsafe._
 
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   // Fancy reflection is used to infer option name from variable name
-
   val checkpointFile = opt[String](required = true)
   val routeFile = opt[String](required = true)
 
@@ -23,71 +23,71 @@ object StrategyEngine extends App {
   val conf = new Conf(args) // Note: This line also works for "object Main extends App"
   //println("routeFile is: " + conf.routeFile())
 
-
+  val TIME_STEP = 1 // (seconds)
   // Race rules
+
+  val ONE_DAY = 24 * 60 * 60 / TIME_STEP
 
   // Start date in seconds from epoch
   val raceStartDate = new DateTime(2017, 10, 12, 0, 0, 0).getMillis / 1000
   // Race start time (seconds after midnight)
-  val raceStartTime = (8 * 60 + 30) * 60
+  val raceStartTime = (8 * 60 + 30) * 60 / TIME_STEP
   // Time the race starts and finishes each day
-  val morningStartTime = 8 * 60 * 60
+  val MORNING_START_TIME = 8 * 60 * 60 / TIME_STEP
   // seconds after midnight
-  val eveningStopTime = 17 * 60 * 60
+  val NIGHT_STOP_TIME = 17 * 60 * 60 / TIME_STEP
   // seconds after midnight
-  val nightStopDuration = 24 * 60 * 60 + morningStartTime - eveningStopTime
+  val NIGHT_STOP_DURATION = 24 * 60 * 60 + MORNING_START_TIME - NIGHT_STOP_TIME
+
+  val CONTROL_STOP_LENGTH = 30 * 60 / TIME_STEP
 
   val initialBattery = 1
   // Fraction of total capacity
   val initialLocation = Pin(-12.46284, 130.84179, 10.555) // Darwin
 
+  val initialTime = raceStartTime
 
   // Race route
   // Read latitude, longitude and altitude data from csv file
   val gpsRoute: Array[Pin] =
-  CSVReader[Pin].readCSVFromFileName(conf.routeFile()).toArray
+    CSVReader[Pin].readCSVFromFileName(conf.routeFile()).toArray
 
   // Mandatory control stop locations
   val checkpoints: Array[Poi] =
-  CSVReader[Poi].readCSVFromFileName(conf.checkpointFile()).toArray
+    CSVReader[Poi].readCSVFromFileName(conf.checkpointFile()).toArray
 
   val distances = GeoMath.cumulativeDistance(gpsRoute)
+
+  val raceLength = distances.last
 
   val bearings = GeoMath.findBearings(gpsRoute)
   val gradients = GeoMath.findGradients(gpsRoute)
 
-  val checkPointDistances = GeoMath.findCheckpointDistances(checkpoints, gpsRoute, distances)
+  val checkpointDistances = GeoMath.findCheckpointDistances(
+    checkpoints,
+    gpsRoute,
+    distances)
 
-  println(distances(distances.length-1))
-  println(bearings.head)
-  println(gradients.head)
+  val distanceInitial = GeoMath.findDistanceFromStart(
+    initialLocation.lat,
+    initialLocation.long,
+    gpsRoute,
+    distances
+  )
 
+  // Speed in meters / TIME_STEP
+  val speeds = List(60,60,60,60,60,60,60,60,60,60,60,60,60,60,60).map( s => s / 3.6 / TIME_STEP )
 
-  //  val metresFromFinish =
-  //
-  //
-  //
-  //  val diffDistances = (loc1, loc2).zipped.map((loc1, loc2) =>
-  //    GeoMath.haversine(loc1.lat, loc1.long, loc2.lat, loc2.long))
-  //  //route.slice(1,route.length)
+  // If we have started the race already, ignore any checkpoints we have passed
+  checkpointDistances.filter( distanceInitial < _ )
 
+  val racePlan = Scheduler.generateRacePlan(
+    distanceInitial,
+    initialTime,
+    checkpointDistances,
+    speeds,
+    NIGHT_STOP_TIME,
+    CONTROL_STOP_LENGTH)
 
-  //  val controlStops = Array(
-  //    Location(-12.46284, 130.84179, 0),    // Darwin
-  //    Location(-14.464216, 132.261955, 0),  // Katherine
-  //    Location(-16.679497, 133.411811, 0),  // Dunmarra
-  //    Location(-19.657682, 134.188508, 0),  // Tennant Creek
-  //    Location(-21.531326, 133.887739, 0),  // Barrow Creek
-  //    Location(-23.70861, 133.8756, 0),     // Alice Springs
-  //    Location(-25.83911, 133.315722, 0),   // Kulgera
-  //    Location(-29.011056, 134.75467, 0),   // Coober Pedy
-  //    Location(-30.9698611, 135.74900, 0),  // Glendambo
-  //    Location(-32.5091944, 137.796722, 0), // Port Augusta
-  //    Location(-34.724838, 138.579624, 0)   // EOT
-  //  )
-
-  val speeds = Array[Double](60, 60, 60, 60, 60, 60, 60, 60, 60)
-
-  checkpoints.foreach(println(_))
-  //val plan = new RacePlan(controlStopGps, speeds)
+  print(racePlan)
 }
