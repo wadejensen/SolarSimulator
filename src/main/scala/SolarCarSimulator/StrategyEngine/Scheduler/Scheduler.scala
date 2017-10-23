@@ -36,14 +36,14 @@ class Scheduler(val morningStartTime: Int,
 
     // List of night stop times, as seconds from HHmm = 0000 on day 0 of race
     var nightStopsLeft = ListBuffer
-      .range(0, daysInRace - 1)
-      .map(day => day * secondsInDay + daysInRace)
+      .range(0, daysInRace)
+      .map(day => day * secondsInDay + nightStopTime )
       .filter(_ > initialTime)
 
     // Create a list of remaining checkpoints in case we start the race midway
     var checkpointsLeft =
       checkpoints
-        .filter( _ > initialDistance)
+        .filter(_ > initialDistance)
         .to[ListBuffer]
 
     var speedsLeft = speeds.to[ListBuffer]
@@ -60,12 +60,11 @@ class Scheduler(val morningStartTime: Int,
 
     while (checkpointsLeft.nonEmpty) {
       val prior = racePlan.last
-      val raceleg = planRaceLeg(
-        prior.d2,
-        prior.t2,
-        speeds.head,
-        checkpoints.head,
-        nightStopsLeft.head )
+      val raceleg = planRaceLeg(prior.d2,
+                                prior.t2 + prior.stopDuration,
+                                speedsLeft.head,
+                                checkpointsLeft.head,
+                                nightStopsLeft.head)
 
       raceleg.stopType match {
         case "CHECKPOINT" => {
@@ -88,12 +87,11 @@ class Scheduler(val morningStartTime: Int,
     racePlan.to[List]
   }
 
-  def planRaceLeg(
-    d1: Double,
-    t1: Int,
-    speed: Double,
-    checkpoint: Double,
-    nightStop: Int): RaceLeg = {
+  def planRaceLeg(d1: Double,
+                  t1: Int,
+                  speed: Double,
+                  checkpoint: Double,
+                  nightStop: Int): RaceLeg = {
 
     val timeToCheckpoint = ((checkpoint - d1) / speed).toInt
     val timeToNextNightStop = nightStopTime - (t1 % secondsInDay)
@@ -102,41 +100,35 @@ class Scheduler(val morningStartTime: Int,
     // Check if stop is control checkpoint
     if (timeToCheckpoint <= timeToNextNightStop) {
       // Check if the control stop will overlap with night stop
-      if ( timeToNextNightStop - timeToCheckpoint < checkpointStopLength ) {
+      if (timeToNextNightStop - timeToCheckpoint < checkpointStopLength) {
         // Both a control and night stop
         val timeServedToday = timeToNextNightStop - timeToCheckpoint
-        val stopTimeToServe = checkpointStopLength - timeServedToday
-        RaceLeg(
-          d1,
-          t1,
-          checkpoint,
-          t1 + timeToCheckpoint,
-          speed,
-          checkpointStopLength + nightStopDuration,
-          "BOTH")
-      }
-      else {
+        RaceLeg(d1,
+                t1,
+                checkpoint,
+                t1 + timeToCheckpoint,
+                speed,
+                checkpointStopLength + nightStopDuration,
+                "BOTH")
+      } else {
         // Just a normal checkpoint stop
-        RaceLeg(
-          d1,
-          t1,
-          checkpoint,
-          t1 + timeToCheckpoint,
-          speed,
-          checkpointStopLength,
-          "CHECKPOINT")
+        RaceLeg(d1,
+                t1,
+                checkpoint,
+                t1 + timeToCheckpoint,
+                speed,
+                checkpointStopLength,
+                "CHECKPOINT")
       }
-    }
-    else {
+    } else {
       // We're heading to camp for the night
-      RaceLeg(
-        d1,
-        t1,
-        timeToNextNightStop * speed + d1,
-        nightStop,
-        speed,
-        nightStopDuration,
-        "NIGHT")
+      RaceLeg(d1,
+              t1,
+              timeToNextNightStop * speed + d1,
+              nightStop,
+              speed,
+              nightStopDuration,
+              "NIGHT")
     }
   }
 }

@@ -1,4 +1,4 @@
-package SolarCarSimulator.Geography
+package SolarCarSimulator.geography
 
 import scala.math._
 

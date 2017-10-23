@@ -1,4 +1,4 @@
-package SolarCarSimulator.Geography
+package SolarCarSimulator.geography
 
 trait Gps {
   val lat: Double // latitude
