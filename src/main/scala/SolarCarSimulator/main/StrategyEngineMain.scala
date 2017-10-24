@@ -7,7 +7,7 @@ import java.time._
 import java.time.format.DateTimeFormatter
 
 import SolarCarSimulator.StrategyEngine.StrategyEngine
-import SolarCarSimulator.geography.GeoMath
+import SolarCarSimulator.StrategyEngine.geography.GeoMath
 import com.typesafe.config._
 
 /**
@@ -40,30 +40,30 @@ object StrategyEngineMain extends App {
   val dateTimeInitial =
     ZonedDateTime
       .of(
-        LocalDateTime.parse(
-          conf.getString("strategy-engine.time-initial")),
-          ZoneId.of("Australia/Darwin")
+        LocalDateTime.parse(conf.getString("strategy-engine.time-initial")),
+        ZoneId.of("Australia/Darwin")
       )
       .toEpochSecond
 
   val raceStartTime =
-    LocalTime.parse(conf.getString("strategy-engine.race-start-time"))
+    LocalTime
+      .parse(conf.getString("strategy-engine.race-start-time"))
       .toSecondOfDay
 
   val raceStartDateTime =
-    ZonedDateTime.of(
-      LocalDate.parse(conf.getString("strategy-engine.race-start-date")),
-      LocalTime.parse(conf.getString("strategy-engine.race-start-time")),
-      ZoneId.of("Australia/Darwin")
-    ).toEpochSecond
+    ZonedDateTime
+      .of(
+        LocalDate.parse(conf.getString("strategy-engine.race-start-date")),
+        LocalTime.parse(conf.getString("strategy-engine.race-start-time")),
+        ZoneId.of("Australia/Darwin")
+      )
+      .toEpochSecond
 
-  // t = 0 simulation time
-  // Simulation time is measured in seconds after midnight on the eve of
-  // the race
+  // Midnight on the eve of the race (unix timestamp)
   val t0 = raceStartDateTime - raceStartTime
 
-  // Time to start the simulation at. Non-zero when we start midway through
-  // the race
+  // Time to start the simulation at. Greater than 8.5 * 3600 when we start
+  // midway through the race
   val timeInitial = (dateTimeInitial - t0).toInt
 
   val morningStartTime =

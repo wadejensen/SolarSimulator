@@ -1,10 +1,12 @@
 package SolarCarSimulator.StrategyEngine
 
-import SolarCarSimulator.geography.{GeoMath, Pin, Poi}
+import SolarCarSimulator.StrategyEngine.geography.{GeoMath, Pin, Poi}
 import purecsv.unsafe.CSVReader
 import java.io.File
+import java.util.GregorianCalendar
 
-import SolarCarSimulator.Scheduler
+import SolarCarSimulator.{RaceLeg, Scheduler}
+import net.e175.klaus.solarpositioning.{AzimuthZenithAngle, DeltaT, SPA}
 
 /**
   * Created by WadeJensen on 22/10/2017.
@@ -65,7 +67,7 @@ object StrategyEngine {
                    morningStartTime: Int,
                    nightStopTime: Int,
                    controlStopLength: Int,
-                   speeds: List[Double]): Unit = {
+                   speedStrategy: List[Double]): Unit = {
 
     val scheduler =
       new Scheduler(morningStartTime, nightStopTime, controlStopLength)
@@ -74,8 +76,39 @@ object StrategyEngine {
                                               timeInitial,
                                               stopTimeToServe,
                                               raceCourse.checkpointDistances,
-                                              speeds)
+                                              speedStrategy)
 
-    println(racePlan)
+    val speeds = scheduler.findRaceSpeeds(racePlan: List[RaceLeg])
+    // Cumulative sum
+    val distances = speeds.scanLeft(0.0)(_ + _).tail
+
+    val (lats, lons, alts) =
+      GeoMath.distance2Gps(distances,
+                           raceCourse.pinDistances,
+                           raceCourse.gpsRoute)
+
+    val (azimuths, zeniths) =
+
+
+
+
+    var dateTime = new GregorianCalendar()
+    dateTime.setTimeInMillis( raceStartTime * 1000 )
+
+    val
+
+
+    val position: AzimuthZenithAngle = SPA.calculateSolarPosition(
+      dateTime,
+      48.21, // latitude (degrees)
+      16.37, // longitude (degrees)
+      190, // elevation (m)
+      DeltaT.estimate(dateTime), // delta T (s)
+      1010, // avg. air pressure (hPa)
+      11); // avg. air temperature (°C)
+    System.out.println("SPA: " + position);
+  }
+
+    println(speeds)
   }
 }

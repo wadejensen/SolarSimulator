@@ -1,4 +1,4 @@
-package SolarCarSimulator.geography
+package SolarCarSimulator.StrategyEngine.geography
 
 import scala.math._
 
@@ -245,5 +245,99 @@ object GeoMath {
     else if (target > list(mid)) reverseBinarySearch(start, mid, target, list)
     else if (target == list(mid)) mid
     else -1 // You have NaNs in your list and therefore have bigger problems
+  }
+
+  def distance2Gps(
+      distances: Array[Double],
+      lookupDistances: Array[Double],
+      gpsRoute: Array[Pin]): (Array[Double], Array[Double], Array[Double]) = {
+
+    val numDist = distances.length
+    val lookupSize = lookupDistances.length
+
+    val nearestIndices: Array[Int] =
+      if ( numDist < lookupSize ) lookupNearests(distances, lookupDistances)
+      else {
+        // We need to compress the distance to be less granular
+        val sampleRate = ceil( numDist / lookupSize ).toInt * 2
+        val sampledDistances =
+          for ( i <- 0 until numDist by sampleRate ) yield distances(i)
+
+        val compressedIndices =
+          lookupNearests(sampledDistances.toArray, lookupDistances)
+
+        val decompressedIndices =
+          for ( i <- 0 until numDist by sampleRate ) yield {
+            val batchSize = min( sampleRate, numDist-i)
+            val batchValue = min( compressedIndices(i/sampleRate) , lookupSize-1 )
+            Array.fill( batchSize ) ( batchValue )
+          }
+        decompressedIndices.flatten.toArray
+      }
+
+    val lats: Array[Double] = gpsRoute.map(_.lat)
+    val lons: Array[Double] = gpsRoute.map(_.long)
+    val alts: Array[Double] = gpsRoute.map(_.alt)
+
+    val lat_bar = nearestIndices.map(i => lats(i))
+    val lon_bar = nearestIndices.map(i => lons(i))
+    val alt_bar = nearestIndices.map(i => alts(i))
+
+    (lat_bar, lon_bar, alt_bar)
+  }
+
+  /**
+    * Takes an array of values x for which to find the nearest value in the
+    * lookup array y. Works only when x.length > y.length
+    * @param x
+    * @param y Lookup array to search for nearest matches
+    * @return An array of indices in y pointing to nearest value in x
+    */
+  def lookupNearests(x: Array[Double], y: Array[Double]): Array[Int] = {
+    implicit def bool2int(b: Boolean): Int = if (b) 1 else 0
+
+    val m: Int = x.length
+    val n: Int = y.length
+
+    if ( m > n )
+      throw new Exception("Search array must be smaller than lookup array.")
+
+    // Prebuild arrays of indices for x, y and concat(x,y)
+    val ix = Array.range(0, m)
+    val iy = Array.range(0, n)
+    val ixy = Array.range(0, m + n)
+
+    val xy: Array[Double] = x ++ y
+    // Array of indexes the same length as xy
+
+    // The indexes into array xy, sorted by the value of their corresponding
+    // array element
+    val p: Array[Int] = ixy.sortWith(xy(_) < xy(_))
+
+    var q: Array[Int] = ixy.clone
+    for (i <- 0 until xy.length) q(p(i)) = i
+
+    // q contains the indices of corresponding values in xy, if xy were to be
+    // sorted. Eg. If q(10) is 15, then xy(10) is the 15th lowest number in xy
+
+    // Continuing from here defies explanation in my brain
+    // We have t2 = cumulative sum of whether p values are greater than m with
+    // implicit Boolean => Int conversion
+    val t = p.map { _ > m }.scanLeft(0)(_ + _).tail
+
+    val r = iy.clone
+    for (i <- 0 until n) r(t(q(i + m))) = r(i)
+
+    val s = ix.map(i => t(q(i)))
+
+    val id = ix.map(i => r(max(s(i), 0)))
+    val iu = ix.map(i => r(min(s(i) + 1, n - 1)))
+
+    val ix_bar = ix.map(i => abs(x(i) - y(id(i))))
+    val iy_bar = ix.map(i => abs(y(iu(i)) - x(i)))
+
+    val it = (ix_bar, iy_bar).zipped.map((x, y) => round(min(x, y)).toInt)
+    val ib = (it, id, iu).zipped.map((t, d, u) => d + t * (u - d))
+    ib
   }
 }

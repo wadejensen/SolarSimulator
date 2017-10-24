@@ -35,10 +35,10 @@ class Scheduler(val morningStartTime: Int,
                        speeds: List[Double]): List[RaceLeg] = {
 
     // List of night stop times, as seconds from HHmm = 0000 on day 0 of race
-    var nightStopsLeft = ListBuffer
-      .range(0, daysInRace)
-      .map(day => day * secondsInDay + nightStopTime )
-      .filter(_ > initialTime)
+    var nightStopsLeft =
+      ListBuffer
+        .tabulate(daysInRace + 1)(day => day * secondsInDay + nightStopTime)
+        .filter(_ > initialTime)
 
     // Create a list of remaining checkpoints in case we start the race midway
     var checkpointsLeft =
@@ -54,7 +54,7 @@ class Scheduler(val morningStartTime: Int,
               initialTime,
               initialDistance,
               initialTime,
-              Int.MaxValue,
+              speed = 0,
               stopTimeToServe,
               "START"))
 
@@ -84,7 +84,8 @@ class Scheduler(val morningStartTime: Int,
       }
       racePlan.append(raceleg)
     }
-    racePlan.to[List]
+    // Remove the "START" leg of the race
+    racePlan.tail.to[List]
   }
 
   def planRaceLeg(d1: Double,
@@ -130,5 +131,26 @@ class Scheduler(val morningStartTime: Int,
               nightStopDuration,
               "NIGHT")
     }
+  }
+
+  def findRaceSpeeds(racePlan: List[RaceLeg]): Array[Double] = {
+    // Duration of the race in seconds from timeInitial to reaching finish line
+    val raceStart = racePlan.head.t1
+    val raceFinish = racePlan.last.t2
+    val raceDuration = raceFinish - raceStart
+
+    // Prefill the array of speeds for each time step with zeros
+    var speeds = Array.fill(raceDuration)(0.0)
+
+    racePlan.foreach(leg => {
+      val i1 = leg.t1 - raceStart
+      val i2 = leg.t2 - raceStart
+
+      for (i <- i1 until i2) {
+        speeds(i) = leg.speed
+      }
+    })
+
+    speeds
   }
 }

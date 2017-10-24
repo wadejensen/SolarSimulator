@@ -1,6 +1,6 @@
 package SolarCarSimulator.StrategyEngine
 
-import SolarCarSimulator.geography.Pin
+import SolarCarSimulator.StrategyEngine.geography.Pin
 import SolarCarSimulator.RaceLeg
 
 /**
