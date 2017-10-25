@@ -1,4 +1,4 @@
-package SolarCarSimulator.StrategyEngine.geography
+package au.com.wadejensen.solarcar.geography
 
 import scala.math._
 
@@ -256,21 +256,22 @@ object GeoMath {
     val lookupSize = lookupDistances.length
 
     val nearestIndices: Array[Int] =
-      if ( numDist < lookupSize ) lookupNearests(distances, lookupDistances)
+      if (numDist < lookupSize) lookupNearests(distances, lookupDistances)
       else {
         // We need to compress the distance to be less granular
-        val sampleRate = ceil( numDist / lookupSize ).toInt * 2
+        val sampleRate = ceil(numDist / lookupSize).toInt * 2
         val sampledDistances =
-          for ( i <- 0 until numDist by sampleRate ) yield distances(i)
+          for (i <- 0 until numDist by sampleRate) yield distances(i)
 
         val compressedIndices =
           lookupNearests(sampledDistances.toArray, lookupDistances)
 
         val decompressedIndices =
-          for ( i <- 0 until numDist by sampleRate ) yield {
-            val batchSize = min( sampleRate, numDist-i)
-            val batchValue = min( compressedIndices(i/sampleRate) , lookupSize-1 )
-            Array.fill( batchSize ) ( batchValue )
+          for (i <- 0 until numDist by sampleRate) yield {
+            val batchSize = min(sampleRate, numDist - i)
+            val batchValue =
+              min(compressedIndices(i / sampleRate), lookupSize - 1)
+            Array.fill(batchSize)(batchValue)
           }
         decompressedIndices.flatten.toArray
       }
@@ -299,7 +300,7 @@ object GeoMath {
     val m: Int = x.length
     val n: Int = y.length
 
-    if ( m > n )
+    if (m > n)
       throw new Exception("Search array must be smaller than lookup array.")
 
     // Prebuild arrays of indices for x, y and concat(x,y)

@@ -1,12 +1,9 @@
-package SolarCarSimulator.StrategyEngine
+package au.com.wadejensen.solarcar.race
 
-import SolarCarSimulator.StrategyEngine.geography.{GeoMath, Pin, Poi}
-import purecsv.unsafe.CSVReader
 import java.io.File
-import java.util.GregorianCalendar
 
-import SolarCarSimulator.{RaceLeg, Scheduler}
-import net.e175.klaus.solarpositioning.{AzimuthZenithAngle, DeltaT, SPA}
+import au.com.wadejensen.solarcar.geography.{GeoMath, Pin, Poi, Sun}
+import purecsv.unsafe.CSVReader
 
 /**
   * Created by WadeJensen on 22/10/2017.
@@ -33,7 +30,7 @@ object StrategyEngine {
     val gpsRoute: Array[Pin] =
       CSVReader[Pin]
         .readCSVFromFile(
-          new File(classLoader.getResource(routeFilePath).getFile())
+          new File(routeFilePath)
         )
         .toArray
 
@@ -41,7 +38,7 @@ object StrategyEngine {
     val checkpoints: Array[Poi] =
       CSVReader[Poi]
         .readCSVFromFile(
-          new File(classLoader.getResource(checkpointFilePath).getFile())
+          new File(checkpointFilePath)
         )
         .toArray
 
@@ -63,7 +60,8 @@ object StrategyEngine {
                    batteryInitial: Double,
                    stopTimeToServe: Int,
                    raceCourse: RaceCourse,
-                   raceStartTime: Long,
+                   raceStartTime: Int,
+                   t0: Long,
                    morningStartTime: Int,
                    nightStopTime: Int,
                    controlStopLength: Int,
@@ -79,6 +77,11 @@ object StrategyEngine {
                                               speedStrategy)
 
     val speeds = scheduler.findRaceSpeeds(racePlan: List[RaceLeg])
+
+    val times = new Array[Long](speeds.length)
+    for (i <- times.indices) {
+      times(i) = t0 + timeInitial + i
+    }
     // Cumulative sum
     val distances = speeds.scanLeft(0.0)(_ + _).tail
 
@@ -87,28 +90,6 @@ object StrategyEngine {
                            raceCourse.pinDistances,
                            raceCourse.gpsRoute)
 
-    val (azimuths, zeniths) =
-
-
-
-
-    var dateTime = new GregorianCalendar()
-    dateTime.setTimeInMillis( raceStartTime * 1000 )
-
-    val
-
-
-    val position: AzimuthZenithAngle = SPA.calculateSolarPosition(
-      dateTime,
-      48.21, // latitude (degrees)
-      16.37, // longitude (degrees)
-      190, // elevation (m)
-      DeltaT.estimate(dateTime), // delta T (s)
-      1010, // avg. air pressure (hPa)
-      11); // avg. air temperature (°C)
-    System.out.println("SPA: " + position);
-  }
-
-    println(speeds)
+    val (azimuths, zeniths) = Sun.findSunPositionsSPA(times, lats, lons, alts)
   }
 }

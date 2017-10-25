@@ -1,4 +1,4 @@
-package SolarCarSimulator.StrategyEngine.geography
+package au.com.wadejensen.solarcar.geography
 
 trait Gps {
   val lat: Double // latitude
