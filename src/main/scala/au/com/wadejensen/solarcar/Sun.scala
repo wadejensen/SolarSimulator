@@ -1,4 +1,4 @@
-package au.com.wadejensen.solarcar.geography
+package au.com.wadejensen.solarcar
 
 import java.util.GregorianCalendar
 

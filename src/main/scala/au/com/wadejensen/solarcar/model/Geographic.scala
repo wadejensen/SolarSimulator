@@ -1,4 +1,4 @@
-package au.com.wadejensen.solarcar.geography
+package au.com.wadejensen.solarcar.model
 
 trait Gps {
   val lat: Double // latitude
@@ -34,5 +34,4 @@ case class Location(lat: Double,
                     alt: Double = 0.0f,
                     dist: Double,
                     gradient: Double,
-                    bearing: Double)
-    extends Gps
+                    bearing: Double) extends Gps

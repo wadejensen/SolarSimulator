@@ -1,4 +1,7 @@
-package au.com.wadejensen.solarcar.race
+package au.com.wadejensen.solarcar
+
+import au.com.wadejensen.solarcar.model.RaceLeg
+import au.com.wadejensen.solarcar.race.RaceLeg
 
 import scala.collection.mutable.ListBuffer
 

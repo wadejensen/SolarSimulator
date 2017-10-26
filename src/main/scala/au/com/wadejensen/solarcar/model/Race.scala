@@ -1,17 +1,13 @@
-package au.com.wadejensen.solarcar.race
-
-import au.com.wadejensen.solarcar.geography.Pin
+package au.com.wadejensen.solarcar.model
 
 /**
   * Created by WadeJensen on 22/10/2017.
   */
-case class RaceCourse(
-    val gpsRoute: Array[Pin],
-    val pinDistances: Array[Double],
-    val bearings: Array[Double],
-    val gradients: Array[Double],
-    val checkpointDistances: List[Double]
-)
+case class RaceCourse( gpsRoute: Array[Pin],
+                       pinDistances: Array[Double],
+                       bearings: Array[Double],
+                       gradients: Array[Double],
+                       checkpointDistances: List[Double])
 
 /**
   *

@@ -1,4 +1,6 @@
-package au.com.wadejensen.solarcar.geography
+package au.com.wadejensen.solarcar
+
+import au.com.wadejensen.solarcar.model.{Pin, Poi}
 
 import scala.math._
 
@@ -316,7 +318,7 @@ object GeoMath {
     val p: Array[Int] = ixy.sortWith(xy(_) < xy(_))
 
     var q: Array[Int] = ixy.clone
-    for (i <- 0 until xy.length) q(p(i)) = i
+    for (i <- xy.indices ) q(p(i)) = i
 
     // q contains the indices of corresponding values in xy, if xy were to be
     // sorted. Eg. If q(10) is 15, then xy(10) is the 15th lowest number in xy

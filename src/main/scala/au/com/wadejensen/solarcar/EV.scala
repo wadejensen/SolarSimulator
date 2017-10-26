@@ -1,5 +1,7 @@
 package au.com.wadejensen.solarcar
 
+import scala.tools.nsc.interactive.Pickler.~
+
 object EV {
 
   // Drag coefficient (dimensionless)
@@ -21,5 +23,10 @@ object EV {
     val powerRollingResistance = speeds.map( s => Crr * g * mass * s )
 
     (powerAero, powerRollingResistance).zipped.map(_+_)
+  }
+
+  def findPotentialEnergy(alts: Array[Double]): Array[Double] = {
+    val deltaY = alts.sliding(2).map{ case Array(a,b) => b-a}.toArray
+    deltaY.map( _ * mass * g)
   }
 }

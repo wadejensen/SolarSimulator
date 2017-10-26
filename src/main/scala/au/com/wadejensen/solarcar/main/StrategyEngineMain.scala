@@ -1,10 +1,8 @@
 package au.com.wadejensen.solarcar.main
 
-import java.net.URLClassLoader
 import java.time._
 
-import au.com.wadejensen.solarcar.geography.GeoMath
-import au.com.wadejensen.solarcar.race.StrategyEngine
+import au.com.wadejensen.solarcar.{GeoMath, StrategyEngine}
 import com.typesafe.config.ConfigFactory
 
 /**

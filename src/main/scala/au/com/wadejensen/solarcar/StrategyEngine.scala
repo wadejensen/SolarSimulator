@@ -1,9 +1,8 @@
-package au.com.wadejensen.solarcar.race
+package au.com.wadejensen.solarcar
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io.File
 
-import au.com.wadejensen.solarcar.{EV, PV}
-import au.com.wadejensen.solarcar.geography.{GeoMath, Pin, Poi, Sun}
+import au.com.wadejensen.solarcar.model.{Pin, Poi, RaceCourse, RaceLeg}
 import purecsv.unsafe.CSVReader
 
 /**
@@ -116,6 +115,8 @@ object StrategyEngine {
     println(t8-t7)
 
     val motorPower = EV.findMotorPower(speeds)
+
+    val potentialEnergy = EV.findPotentialEnergy(alts)
 
     Unit
 
