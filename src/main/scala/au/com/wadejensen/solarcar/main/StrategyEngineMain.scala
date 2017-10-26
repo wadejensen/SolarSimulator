@@ -1,34 +1,64 @@
 package au.com.wadejensen.solarcar.main
 
+import java.io.{BufferedWriter, File, FileWriter}
 import java.time._
 
-import au.com.wadejensen.solarcar.{GeoMath, StrategyEngine}
+import au.com.wadejensen.solarcar.model.RaceCourse
+import au.com.wadejensen.solarcar.{Calibrator, GeoMath, StrategyEngine}
 import com.typesafe.config.ConfigFactory
 
+import scala.collection.immutable.HashMap
+
 /**
-  * Strategy engine entry point. This main calculates the optimal variable
-  * speed strategy for the World Solar Challenge.
+  * Strategy engine entry point. This main calculates the performance of
+  * a Challenger class solar vehicle in the World Solar Challenge.
   * Configurations are specified in the packaged file:
   * src\main\resources\reference.conf
   * This file can be overridden by adding an application.conf file to the
   * classpath, or passing -Dconfig.file=path/to/config-file as a command line
-  * arg when running the Strategy Engine application jar
+  * arg when running the Strategy Engine application jar.
   *
-  * All simulation calculations are performed using a one second time step
+  * All simulation calculations are performed using a one second time step.
   */
 object StrategyEngineMain extends App {
+  val conf = ConfigFactory.load
+  // Calibrate timing mechanism to get overhead of System.nanoTime
+  val timerOverhead =
+    Calibrator.findNanoTimeOverhead(
+      conf.getInt("strategy-engine.warmup-runs"),
+      conf.getInt("strategy-engine.test-runs")
+    )
+  println(s"Average overhead calculated as $timerOverhead ns.\n")
+  System.exit(1)
 
-  for (i <- 0 until 1) {
+  val cpus = Runtime.getRuntime.availableProcessors
 
-    val conf = ConfigFactory.load()
+  val parallelism = conf.getString("strategy-engine.parallelism")
 
-    val cpus = Runtime.getRuntime().availableProcessors
-    val parallelism = conf.getString("strategy-engine.parallelism")
+  println(s"$cpus logical CPU cores detected.\n " +
+    s"Parallelism set to $parallelism")
 
-    println(s"$cpus logical CPU cores detected.\n " +
-      s"Parallelism set to $parallelism")
+  val warmupRuns = conf.getInt("strategy-engine.warmup-runs")
+  val testRuns = conf.getInt("strategy-engine.test-runs")
 
-    println("1")
+  val currentTime = LocalDateTime.now.toString
+
+  // Write out timing results
+  val file = new File(s"application-timing-$parallelism-$currentTime.csv")
+  val bw = new BufferedWriter(new FileWriter(file))
+  bw.write(s"------------------------------------------------------\n")
+  bw.write(s"Start time = $currentTime\n")
+  bw.write(s"Available cores = $cpus\n")
+  bw.write(s"Parallelism = $parallelism\n")
+  bw.write(s"JVM warming with $warmupRuns runs.\n")
+
+  for (i <- 0 until warmupRuns + testRuns) {
+    var timerResults = HashMap.empty[String,Long]
+
+    /** ------------------------- Timed code starts ----------------------- **/
+    val codeTimingStart = System.nanoTime
+    /** -------- Read config file and configure race course / rules ------- **/
+    val timerRaceCourse1 = System.nanoTime
     val raceCourse = StrategyEngine.generateRaceCourse(
       conf.getString("strategy-engine.route-file-path"),
       conf.getString("strategy-engine.checkpoint-file-path"))
@@ -39,8 +69,6 @@ object StrategyEngineMain extends App {
         conf.getDouble("strategy-engine.longitude-initial"),
         raceCourse.gpsRoute,
         raceCourse.pinDistances)
-
-    /* --- Calculate optimal race strategy --- */
 
     val dateTimeInitial =
       ZonedDateTime
@@ -86,10 +114,11 @@ object StrategyEngineMain extends App {
         .parse(conf.getString("strategy-engine.control-stop-length"))
         .toSecondOfDay
 
-    val speeds =
-      List(69, 69, 69, 69, 69, 69, 69, 69, 69, 69, 69, 69, 69, 69, 69)
-        .map(s => s / 3.6)
+    val raceSpeed = conf.getDouble("strategy-engine.race-speed")
+    val speeds = List.fill(100)(raceSpeed).map(s => s / 3.6)
+    val timerRaceCourse2 = System.nanoTime
 
+    /** --------------------------- Simulate race ------------------------ **/
     val simulateRaceWithDefaults =
       StrategyEngine.simulateRace(
         timeInitial,
@@ -102,10 +131,20 @@ object StrategyEngineMain extends App {
         morningStartTime,
         nightStopTime,
         controlStopLength,
+        codeTimingStart,
         _: List[Double]
       )
 
-    val result = simulateRaceWithDefaults(speeds)
-  }
+    val codeTiming = simulateRaceWithDefaults(speeds)
+    /** -------------------- Timed code has already ended ----------------- **/
 
+    if (i == warmupRuns) {
+      bw.write(s"------------------------------------------------------\n")
+      bw.write(s"JVM is warm. Start $testRuns testing runs.\n")
+    }
+    bw.write(codeTiming.toString(i, timerOverhead))
+  }
+  bw.close()
+  val filePath = file.getAbsolutePath
+  println(s"Code timing statistics saved to file: $filePath.\n")
 }

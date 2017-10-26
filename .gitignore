@@ -5,3 +5,4 @@ src/main/scala/au/com/wadejensen/solarcar/geography/test.sc
 *speeds.csv
 *sun2arr-verification.csv
 *sun2arr.csv
+src/main/scala/au/com/wadejensen/solarcar/test.sc

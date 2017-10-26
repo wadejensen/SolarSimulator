@@ -1,9 +1,15 @@
 package au.com.wadejensen.solarcar
 
 import java.io.File
+import java.time._
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-import au.com.wadejensen.solarcar.model.{Pin, Poi, RaceCourse, RaceLeg}
+import au.com.wadejensen.solarcar.model._
 import purecsv.unsafe.CSVReader
+
+import scala.collection.immutable.HashMap
+
 
 /**
   * Created by WadeJensen on 22/10/2017.
@@ -63,8 +69,11 @@ object StrategyEngine {
                    morningStartTime: Int,
                    nightStopTime: Int,
                    controlStopLength: Int,
-                   speedStrategy: List[Double]): Unit = {
+                   codeTimingStart: Long,
+                   speedStrategy: List[Double]): CodeTiming = {
 
+    /** ------ Plan when to drive and at what speed during the race ------**/
+    val timerPlanRace1 = System.nanoTime
     val scheduler =
       new Scheduler(morningStartTime, nightStopTime, controlStopLength)
 
@@ -75,7 +84,10 @@ object StrategyEngine {
                                               speedStrategy)
 
     val speeds = scheduler.findRaceSpeeds(racePlan: List[RaceLeg])
+    val timerPlanRace2 = System.nanoTime
 
+    /** ----- Calculate when and where the car is during in the race ----- **/
+    val timerGeospatial1 = System.nanoTime
     val times = new Array[Long](speeds.length)
     for (i <- times.indices) {
       times(i) = t0 + timeInitial + i
@@ -87,38 +99,102 @@ object StrategyEngine {
       GeoMath.distance2Gps(distances,
                            raceCourse.pinDistances,
                            raceCourse.gpsRoute)
+    val timerGeospatial2 = System.nanoTime
 
-    val t1 = System.currentTimeMillis()
+    /** --------------- Calculate the position of the sun --------------- **/
+
+    val timerSunPosition1 = System.nanoTime
     val (azimuths, zeniths) = Sun.findSunPositionsGrena3(times, lats, lons, alts)
-    val t2 = System.currentTimeMillis()
+    val timerSunPosition2 = System.nanoTime
 
-    println(t2-t1)
-
-    val t3 = System.currentTimeMillis()
+    /** ---- Calculate the intensity of the sun and solar array power ---- **/
+    val timerSolar1 = System.nanoTime
     val (directRadiation, diffuseRadiation) = Sun.findIrrandiance(zeniths)
-    val t4 = System.currentTimeMillis()
 
-    println(t4-t3)
-
-    val t5 = System.currentTimeMillis()
     // Get the angles of the array with respect to the solar normal
     val sun2Arr = PV.tiltArray(zeniths, speeds)
-    val t6 = System.currentTimeMillis()
 
-    println(t6-t5)
-
-    val t7 = System.currentTimeMillis()
-    val inputPower =
+    val solarPower =
       PV.findArrayPower(sun2Arr, directRadiation, diffuseRadiation)
-    val t8 = System.currentTimeMillis()
+    val timerSolar2 = System.nanoTime
 
-    println(t8-t7)
-
+    /** --------------- Calculate power usage by the motor --------------- **/
+    val timerMotor1 = System.nanoTime
     val motorPower = EV.findMotorPower(speeds)
+    val deltaPE = EV.findPotentialEnergy(alts)
+    val timerMotor2 = System.nanoTime
 
-    val potentialEnergy = EV.findPotentialEnergy(alts)
+    /** ------------ Calculate battery charging / discharging ------------ **/
+    val timerBattery1 = System.nanoTime
+    val netPower = Battery.findNetPower(motorPower, solarPower)
+    val netEnergy = Battery.findNetEnergy(netPower, deltaPE)
 
-    Unit
+    val soc = Battery.findStateOfCharge(netEnergy)
+    val timerBattery2 = System.nanoTime
 
+    val codeTimingFinish = System.currentTimeMillis()
+    /** ------------------------ End of timed code ----------------------- **/
+
+    /** ------------------------_ Print race results --------------------- **/
+    val raceDuration = times.length.toDouble / 3600.00
+
+    val startDatetime = ZonedDateTime.ofInstant(
+      Instant.ofEpochSecond(t0 + timeInitial),
+      ZoneId.of("Australia/Darwin")
+    )
+    val finishDatetime = ZonedDateTime.ofInstant(
+      Instant.ofEpochSecond(t0 + timeInitial + times.length),
+      ZoneId.of("Australia/Darwin")
+    )
+
+    val formattedStart =
+      startDatetime.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+    val formattedFinish =
+      finishDatetime.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+
+    val duration = Duration.ofSeconds(times.length)
+    val days = duration.toDays
+    val hrs = duration.toHours % 24
+    val mins = duration.toHours % 60
+    val secs = duration.getSeconds % 60
+
+    val peakSolar = solarPower.max
+    val peakMotor = motorPower.max
+    val minBatt = soc.min
+    val finalBatt = soc.last
+
+    // Time spent driving
+    val driveTime = speeds.count( _ != 0 )
+    val numCheckpoints = racePlan.count( _.stopType == "CHECKPOINT")
+
+    // Total race time between morning start time and night stop time during
+    // during the challenge
+    val dayTime = driveTime + numCheckpoints * controlStopLength
+    val averageSpeed = distances.last / dayTime * 3.6
+
+    println(s"Solar vehicle commenced race at: $formattedStart.")
+    println(s"Solar vehicle completed race at: $formattedFinish.")
+    println(s"Race duration: $days days $hrs hours $mins min $secs sec.")
+    println(s"Final battery SOC: $finalBatt.")
+
+    println(s"Peak solar input: $peakSolar Watts.")
+    println(s"Peak power usage: $peakMotor Watts.")
+    println(s"Average speed: $averageSpeed km/h.")
+
+    if (minBatt == 0.0) println("WARNING: Battery SOC fell to 0% during the" +
+      " race. Cannot complete WSC at this speed, slow down or increase the" +
+      " battery pack size.")
+    else println(s"Lowest battery capacity reached: $minBatt%. How much " +
+      s"faster can we drive and stay above 0.0% ?")
+
+    new CodeTiming(
+      t1 = codeTimingStart,
+      t2 = codeTimingFinish,
+      planRace = timerPlanRace2 - timerPlanRace1,
+      geospatial = timerGeospatial2 - timerGeospatial1,
+      sunPosition = timerSunPosition2 - timerSunPosition1,
+      solarPower = timerSolar2- timerSolar1,
+      motorPower = timerMotor2 - timerMotor1,
+      batteryPower = timerBattery2 - timerBattery1)
   }
 }
