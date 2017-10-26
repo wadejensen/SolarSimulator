@@ -71,7 +71,8 @@ object StrategyEngine {
                    controlStopLength: Int,
                    codeTimingStart: Long,
                    timerRaceCourse: Long,
-                   speedStrategy: List[Double]): CodeTiming = {
+                   speedStrategy: List[Double],
+                   fileWriter: ): CodeTiming = {
 
     /** ------ Plan when to drive and at what speed during the race ------**/
     val timerPlanRace1 = System.nanoTime

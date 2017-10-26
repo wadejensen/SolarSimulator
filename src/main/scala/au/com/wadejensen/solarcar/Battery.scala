@@ -23,10 +23,7 @@ object Battery {
   def findNetEnergy(netPower: Array[Double],
                 potentialEnergy: Array[Double]): Array[Double] = {
     // Change in energy
-    val deltaQ =
-      (netPower, potentialEnergy).zipped.map( (p,PE) => p + PE*electricalEff )
-    // Cumulative net energy
-    deltaQ.scanLeft(0.0)( _+_ ).tail
+    (netPower, potentialEnergy).zipped.map( (p,PE) => p + PE*electricalEff )
   }
 
   def findStateOfCharge( netEnergy: Array[Double] ): Array[Double] = {
