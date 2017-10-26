@@ -43,16 +43,16 @@ object StrategyEngineMain extends App {
   println(s"$cpus logical CPU cores detected.\n" +
     s"Parallelism set to $parallelism")
 
-  // Write out timing results
-  val file = new File(s"strategy-timing-par-$parallelism-time-$currentTime.csv")
-  val bw = new BufferedWriter(new FileWriter(file))
-  bw.write(s"------------------------------------------------------\n")
-  bw.write(s"Start time = $currentTime\n")
-  bw.write(s"Available cores = $cpus\n")
-  bw.write(s"Parallelism = $parallelism\n")
-  bw.write(s"JVM warming with $warmupRuns runs.\n")
+//  // Write out timing results
+//  val file = new File(s"strategy-timing-par-$parallelism-time-$currentTime.csv")
+//  val bw = new BufferedWriter(new FileWriter(file))
+//  bw.write(s"------------------------------------------------------\n")
+//  bw.write(s"Start time = $currentTime\n")
+//  bw.write(s"Available cores = $cpus\n")
+//  bw.write(s"Parallelism = $parallelism\n")
+//  bw.write(s"JVM warming with $warmupRuns runs.\n")
 
-  for (i <- 0 until warmupRuns + testRuns) {
+//  for (i <- 0 until warmupRuns + testRuns) {
     /** ------------------------- Timed code starts ----------------------- **/
     val codeTimingStart = System.nanoTime
     /** -------- Read config file and configure race course / rules ------- **/
@@ -112,7 +112,15 @@ object StrategyEngineMain extends App {
         .parse(conf.getString("strategy-engine.control-stop-length"))
         .toSecondOfDay
 
-    val raceSpeed = conf.getDouble("strategy-engine.race-speed")
+  val file = new File(s"strategy-results-short.csv")
+  val bw = new BufferedWriter(new FileWriter(file))
+  bw.write("Speed, Final Battery, Duration, Min Battery, Max Battery, Max Motor, Max Array \n")
+
+  val raceSpeeds = List.tabulate[Double](40)( i => 50 + i )
+
+  for ( raceSpeed <- raceSpeeds.iterator ) {
+
+    //val raceSpeed = conf.getDouble("strategy-engine.race-speed")
     val speeds = List.fill(100)(raceSpeed).map(s => s / 3.6)
     val timerRaceCourse2 = System.nanoTime
 
@@ -131,19 +139,25 @@ object StrategyEngineMain extends App {
         controlStopLength,
         codeTimingStart,
         timerRaceCourse2 - timerRaceCourse1,
-        _: List[Double]
+        _: List[Double],
+        bw
       )
 
     val codeTiming = simulateRaceWithDefaults(speeds)
+
     /** -------------------- Timed code has already ended ----------------- **/
 
-    if (i == warmupRuns) {
-      bw.write(s"------------------------------------------------------\n")
-      bw.write(s"JVM is warm. Start $testRuns testing runs.\n")
-    }
-    bw.write(codeTiming.toString(i, timerOverhead))
+    println(codeTiming.toString((raceSpeed * 10).toInt, timerOverhead))
   }
-  bw.close()
-  val filePath = file.getAbsolutePath
-  println(s"Code timing statistics saved to file: $filePath.\n")
+  bw.close
+//
+//    if (i == warmupRuns) {
+//      bw.write(s"------------------------------------------------------\n")
+//      bw.write(s"JVM is warm. Start $testRuns testing runs.\n")
+//    }
+//    bw.write(codeTiming.toString(i, timerOverhead))
+//  }
+//  bw.close()
+//  val filePath = file.getAbsolutePath
+//  println(s"Code timing statistics saved to file: $filePath.\n")
 }

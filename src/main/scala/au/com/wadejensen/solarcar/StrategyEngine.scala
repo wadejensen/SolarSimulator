@@ -1,14 +1,11 @@
 package au.com.wadejensen.solarcar
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io.{BufferedWriter, File}
 import java.time._
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 import au.com.wadejensen.solarcar.model._
 import purecsv.unsafe.CSVReader
-
-import scala.collection.immutable.HashMap
 
 
 /**
@@ -72,7 +69,7 @@ object StrategyEngine {
                    codeTimingStart: Long,
                    timerRaceCourse: Long,
                    speedStrategy: List[Double],
-                   fileWriter: ): CodeTiming = {
+                   bw: BufferedWriter): CodeTiming = {
 
     /** ------ Plan when to drive and at what speed during the race ------**/
     val timerPlanRace1 = System.nanoTime
@@ -133,26 +130,6 @@ object StrategyEngine {
 
     val soc = Battery.findStateOfCharge(netEnergy)
 
-    // FileWriter
-    val file = new File("batteryDump.csv")
-    val bw = new BufferedWriter(new FileWriter(file))
-    bw.write("index, soc\n")
-    for ( i <- 0 until soc.length) {
-      val t = i + timeInitial
-      for ( j <- 0 until racePlan.length) {
-        if ( t == racePlan(j).t1 || t == racePlan(j).t2 ) {
-          bw.write(s"------------------------------------------------------\n")
-          bw.write(s"------------------------------------------------------\n")
-        }
-      }
-      val s = soc(i)
-      bw.write(s"$t, $s\n")
-    }
-    bw.close()
-
-    println(file.getAbsolutePath)
-
-
     val timerBattery2 = System.nanoTime
 
     val codeTimingFinish = System.nanoTime
@@ -210,6 +187,14 @@ object StrategyEngine {
       " battery pack size.")
     else println(s"Lowest battery capacity reached: $minBatt%. How much " +
       s"faster can we drive and stay above 0.0% ?\n\n")
+
+
+    val speed = speeds.head
+    val timeLength = times.head
+    val maxBatt = soc.max
+
+    val output =s"$speed, $finalBatt, $timeLength, $minBatt, $maxBatt, $peakMotor, $peakSolar\n"
+    bw.write(output)
 
     new CodeTiming(
       t1 = codeTimingStart,

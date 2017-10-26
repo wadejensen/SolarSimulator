@@ -9,7 +9,7 @@ class Scheduler(val morningStartTime: Int,
                 val checkpointStopLength: Int) {
 
   val secondsInDay = 24 * 60 * 60
-  val daysInRace = 6
+  val daysInRace = 10
 
   val nightStopDuration = (secondsInDay - nightStopTime) + morningStartTime
 
