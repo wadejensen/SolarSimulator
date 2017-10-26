@@ -6,3 +6,5 @@ src/main/scala/au/com/wadejensen/solarcar/geography/test.sc
 *sun2arr-verification.csv
 *sun2arr.csv
 src/main/scala/au/com/wadejensen/solarcar/test.sc
+strategy-timing*
+batteryDump*

@@ -13,7 +13,7 @@ object Battery {
   val numCells = numSeriesCells * numParallelStrings
 
   val capacityWh = wattHoursPerCell * numCells
-  val capacityJoules = capacityWh / 3600
+  val capacityJoules = capacityWh * 3600
 
   def findNetPower(motorPower: Array[Double],
                solarPower: Array[Double]): Array[Double] = {
