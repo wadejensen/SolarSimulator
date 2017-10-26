@@ -1,5 +1,7 @@
 package au.com.wadejensen.solarcar
 
+import scala.math._
+
 object PV {
 
   // Maximum angle the array can tilt by
@@ -30,29 +32,21 @@ object PV {
     )
   }
 
-//  function tilt(Array, vBlockTimeIDX,zenith)
-//  %% Retrieve data from other objects
-//    Array.sun2Arr = zenith;
-//
-//  Array.sun2Arr( (vBlockTimeIDX==0) & (zenith < Array.maxTilt) ) = Array.tiltAccuracy;
-//  % when it is possible to tilt the array perfectly, tilt it
-//    % almost perfectly
-//
-//  indexQuery = (vBlockTimeIDX==0) & (zenith >= Array.maxTilt);
-//  Array.sun2Arr( indexQuery ) = ...
-//  Array.sun2Arr (indexQuery)- Array.maxTilt ;
-//  % when it is not possible to tilt perfectly, tilt to the
-//  % maximum angle
-//
-//  end
-//  function findOptimalTilt(Array)
-//  zenith = getZenith();
-//  Array.optimalTilt = zenith;
-//  Array.optimalTilt(Array.optimalTilt > Array.maxTilt)...
-//  = Array.maxTilt;
-//  end
-//
+  def findArrayPower( sun2Arr: Array[Double],
+                      directRadiation: Array[Double],
+                      diffuseRadiation: Array[Double] ): Array[Double] = {
 
 
+    (sun2Arr, directRadiation, diffuseRadiation).zipped
+      .map( calculateArrayPower(_,_,_) )
+  }
 
+  def calculateArrayPower( theta: Double,
+                           directRadiation: Double,
+                           diffuseRadiation: Double): Double = {
+
+    val scaleDirRad = directRadiation * cos(theta*Pi/180)
+    val irradiance = scaleDirRad + diffuseRadiation
+    (directRadiation * cos(theta*Pi/180) + diffuseRadiation) * arrayEff * area
+  }
 }

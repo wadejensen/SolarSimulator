@@ -108,43 +108,12 @@ object StrategyEngine {
 
     println(t6-t5)
 
-    // FileWriter
-    val file = new File("sun2arr.csv")
-    val bw = new BufferedWriter(new FileWriter(file))
-    bw.write("index, speed, zenith, angleWithSun\n")
-    for ( i <- 0 until sun2Arr.length) {
-      val t = i + timeInitial
-      for ( j <- 0 until racePlan.length) {
-        if ( t == racePlan(j).t1 || t == racePlan(j).t2 ) {
-          bw.write(s"------------------------------------------------------\n")
-          bw.write(s"------------------------------------------------------\n")
-        }
-      }
-      val s = sun2Arr(i)
-      val z = zeniths(i)
-      val v = speeds(i)
-      bw.write(s"$t, $v, $z, $s\n")
-    }
-    bw.close()
+    val t7 = System.currentTimeMillis()
+    val inputPower =
+      PV.findArrayPower(sun2Arr, directRadiation, diffuseRadiation)
+    val t8 = System.currentTimeMillis()
 
-    println(file.getAbsolutePath)
-
-    //
-//
-//    z = zenith*pi/180;
-//
-//    AM = 1./( cos(z) + 0.50572 .* ((96.07995 - z) .^ (-1.6364) ));
-//    directRadiation = Sun.solarPowerExtraTerrestrial * 0.7 .^ (AM.^0.678);
-//
-//    cond = (imag(directRadiation) == 0);
-//
-//    directRadiation = abs(directRadiation.*cond);
-//    diffuseRadiation = Sun.diffuseRadiationCoeff*directRadiation;
-//
-//    Sun.dirRad = directRadiation;
-//    Sun.diffRad = diffuseRadiation;
-
-
+    println(t8-t7)
 
     Unit
 
