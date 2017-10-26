@@ -19,7 +19,7 @@ object Calibrator {
         val t2 = System.nanoTime
 
         val overhead = (t2 - t1) / 1000000.0
-        println(s"Iteration $i took an average of $overhead in 10,000,000 " +
+        println(s"Iteration $i took an average of $overhead in 1,000,000 " +
           s"calls to System.nanoTime.")
         overhead
       }
@@ -38,6 +38,9 @@ object Calibrator {
     */
   def callNanoTime( count: Int): Unit = {
     var i = 0
-    while ( i < count ) i += 1; System.nanoTime
+    while ( i < count ) {
+      i += 1
+      System.nanoTime
+    }
   }
 }

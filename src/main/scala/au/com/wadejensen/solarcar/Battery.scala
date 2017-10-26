@@ -17,7 +17,7 @@ object Battery {
 
   def findNetPower(motorPower: Array[Double],
                solarPower: Array[Double]): Array[Double] = {
-    (motorPower, solarPower).zipped.map( (m,sol) => m/electricalEff + sol )
+    (motorPower, solarPower).zipped.map( (m,sol) => sol - m/electricalEff)
   }
 
   def findNetEnergy(netPower: Array[Double],

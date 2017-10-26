@@ -1,6 +1,6 @@
 package au.com.wadejensen.solarcar
 
-import java.io.File
+import java.io.{BufferedWriter, File, FileWriter}
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -70,6 +70,7 @@ object StrategyEngine {
                    nightStopTime: Int,
                    controlStopLength: Int,
                    codeTimingStart: Long,
+                   timerRaceCourse: Long,
                    speedStrategy: List[Double]): CodeTiming = {
 
     /** ------ Plan when to drive and at what speed during the race ------**/
@@ -130,12 +131,33 @@ object StrategyEngine {
     val netEnergy = Battery.findNetEnergy(netPower, deltaPE)
 
     val soc = Battery.findStateOfCharge(netEnergy)
+
+    // FileWriter
+    val file = new File("batteryDump.csv")
+    val bw = new BufferedWriter(new FileWriter(file))
+    bw.write("index, soc\n")
+    for ( i <- 0 until soc.length) {
+      val t = i + timeInitial
+      for ( j <- 0 until racePlan.length) {
+        if ( t == racePlan(j).t1 || t == racePlan(j).t2 ) {
+          bw.write(s"------------------------------------------------------\n")
+          bw.write(s"------------------------------------------------------\n")
+        }
+      }
+      val s = soc(i)
+      bw.write(s"$t, $s\n")
+    }
+    bw.close()
+
+    println(file.getAbsolutePath)
+
+
     val timerBattery2 = System.nanoTime
 
-    val codeTimingFinish = System.currentTimeMillis()
+    val codeTimingFinish = System.nanoTime
     /** ------------------------ End of timed code ----------------------- **/
 
-    /** ------------------------_ Print race results --------------------- **/
+    /** ------------------------- Print race results --------------------- **/
     val raceDuration = times.length.toDouble / 3600.00
 
     val startDatetime = ZonedDateTime.ofInstant(
@@ -172,9 +194,10 @@ object StrategyEngine {
     val dayTime = driveTime + numCheckpoints * controlStopLength
     val averageSpeed = distances.last / dayTime * 3.6
 
+    println("----------------------------------------------------------------")
     println(s"Solar vehicle commenced race at: $formattedStart.")
     println(s"Solar vehicle completed race at: $formattedFinish.")
-    println(s"Race duration: $days days $hrs hours $mins min $secs sec.")
+    println(s"Race duration: $days d $hrs h $mins m $secs s.")
     println(s"Final battery SOC: $finalBatt.")
 
     println(s"Peak solar input: $peakSolar Watts.")
@@ -185,11 +208,12 @@ object StrategyEngine {
       " race. Cannot complete WSC at this speed, slow down or increase the" +
       " battery pack size.")
     else println(s"Lowest battery capacity reached: $minBatt%. How much " +
-      s"faster can we drive and stay above 0.0% ?")
+      s"faster can we drive and stay above 0.0% ?\n\n")
 
     new CodeTiming(
       t1 = codeTimingStart,
       t2 = codeTimingFinish,
+      courseRules = timerRaceCourse,
       planRace = timerPlanRace2 - timerPlanRace1,
       geospatial = timerGeospatial2 - timerGeospatial1,
       sunPosition = timerSunPosition2 - timerSunPosition1,

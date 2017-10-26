@@ -2,6 +2,7 @@ package au.com.wadejensen.solarcar.model
 
 class CodeTiming( val t1: Long,
                   val t2: Long,
+                  val courseRules: Long,
                   val planRace: Long,
                   val geospatial: Long,
                   val sunPosition: Long,
@@ -9,7 +10,7 @@ class CodeTiming( val t1: Long,
                   val motorPower: Long,
                   val batteryPower: Long) {
 
-  val nanoCallCount = 13
+  val nanoCallCount = 15
 
   /**
     * A helper method for timings of each code section to be displayed and saved
@@ -27,6 +28,7 @@ class CodeTiming( val t1: Long,
     */
   def toString(i: Int, nanoTimeOverhead: Double): String = {
     val totalTime = t2 - t1 - nanoCallCount * nanoTimeOverhead
+    val courseRulesTime = courseRules - nanoTimeOverhead
     val planRaceTime = planRace - nanoTimeOverhead
     val geospatialTime = geospatial - nanoTimeOverhead
     val sunPositionTime = sunPosition - nanoTimeOverhead
@@ -36,6 +38,7 @@ class CodeTiming( val t1: Long,
 
     // Calculate timings as a proportion of total time
     val totalTimePC = totalTime / totalTime * 100
+    val courseRulesPC = courseRulesTime / totalTime * 100
     val planRacePC =   planRaceTime / totalTime * 100
     val geospatialPC = geospatialTime / totalTime * 100
     val sunPositionPC = sunPositionTime / totalTime * 100
@@ -45,6 +48,7 @@ class CodeTiming( val t1: Long,
 
     s"Iteration, code section, duration (ns), duration (%)\n" +
     s"$i, Total Time, $totalTime, $totalTimePC \n" +
+    s"$i, Course Rules, $courseRulesTime, $courseRulesPC \n" +
     s"$i, Plan Race, $planRaceTime, $planRacePC \n" +
     s"$i, Geospatial, $geospatialTime, $geospatialPC \n" +
     s"$i, Sun Position, $sunPositionTime, $sunPositionPC \n" +

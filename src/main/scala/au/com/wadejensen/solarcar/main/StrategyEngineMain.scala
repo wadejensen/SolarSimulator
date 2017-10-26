@@ -2,6 +2,7 @@ package au.com.wadejensen.solarcar.main
 
 import java.io.{BufferedWriter, File, FileWriter}
 import java.time._
+import java.time.format.DateTimeFormatter
 
 import au.com.wadejensen.solarcar.model.RaceCourse
 import au.com.wadejensen.solarcar.{Calibrator, GeoMath, StrategyEngine}
@@ -21,30 +22,29 @@ import scala.collection.immutable.HashMap
   * All simulation calculations are performed using a one second time step.
   */
 object StrategyEngineMain extends App {
+
+  val currentTime =
+    LocalDateTime.now
+      .format(DateTimeFormatter.ofPattern("yyyyMMdd'T'hhmm"))
+  println(s"$currentTime :: Starting strategy engine and profiler.")
+
   val conf = ConfigFactory.load
   // Calibrate timing mechanism to get overhead of System.nanoTime
-  val timerOverhead =
-    Calibrator.findNanoTimeOverhead(
-      conf.getInt("strategy-engine.warmup-runs"),
-      conf.getInt("strategy-engine.test-runs")
-    )
-  println(s"Average overhead calculated as $timerOverhead ns.\n")
-  System.exit(1)
-
-  val cpus = Runtime.getRuntime.availableProcessors
-
-  val parallelism = conf.getString("strategy-engine.parallelism")
-
-  println(s"$cpus logical CPU cores detected.\n " +
-    s"Parallelism set to $parallelism")
-
   val warmupRuns = conf.getInt("strategy-engine.warmup-runs")
   val testRuns = conf.getInt("strategy-engine.test-runs")
 
-  val currentTime = LocalDateTime.now.toString
+  val timerOverhead =
+    Calibrator.findNanoTimeOverhead( warmupRuns, testRuns )
+  println(s"Average overhead calculated as $timerOverhead ns.\n")
+
+  val cpus = Runtime.getRuntime.availableProcessors
+  val parallelism = conf.getString("strategy-engine.parallelism")
+
+  println(s"$cpus logical CPU cores detected.\n" +
+    s"Parallelism set to $parallelism")
 
   // Write out timing results
-  val file = new File(s"application-timing-$parallelism-$currentTime.csv")
+  val file = new File(s"strategy-timing-par-$parallelism-time-$currentTime.csv")
   val bw = new BufferedWriter(new FileWriter(file))
   bw.write(s"------------------------------------------------------\n")
   bw.write(s"Start time = $currentTime\n")
@@ -53,8 +53,6 @@ object StrategyEngineMain extends App {
   bw.write(s"JVM warming with $warmupRuns runs.\n")
 
   for (i <- 0 until warmupRuns + testRuns) {
-    var timerResults = HashMap.empty[String,Long]
-
     /** ------------------------- Timed code starts ----------------------- **/
     val codeTimingStart = System.nanoTime
     /** -------- Read config file and configure race course / rules ------- **/
@@ -132,6 +130,7 @@ object StrategyEngineMain extends App {
         nightStopTime,
         controlStopLength,
         codeTimingStart,
+        timerRaceCourse2 - timerRaceCourse1,
         _: List[Double]
       )
 
