@@ -20,8 +20,16 @@ import com.typesafe.config.ConfigFactory
   */
 object StrategyEngineMain extends App {
 
-  for (i <- 0 until 1000) {
+  for (i <- 0 until 1) {
+
     val conf = ConfigFactory.load()
+
+    val cpus = Runtime.getRuntime().availableProcessors
+    val parallelism = conf.getString("strategy-engine.parallelism")
+
+    println(s"$cpus logical CPU cores detected.\n " +
+      s"Parallelism set to $parallelism")
+
     println("1")
     val raceCourse = StrategyEngine.generateRaceCourse(
       conf.getString("strategy-engine.route-file-path"),

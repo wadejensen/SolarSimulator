@@ -1,7 +1,8 @@
 package au.com.wadejensen.solarcar.race
 
-import java.io.File
+import java.io.{BufferedWriter, File, FileWriter}
 
+import au.com.wadejensen.solarcar.PV
 import au.com.wadejensen.solarcar.geography.{GeoMath, Pin, Poi, Sun}
 import purecsv.unsafe.CSVReader
 
@@ -23,8 +24,6 @@ object StrategyEngine {
     */
   def generateRaceCourse(routeFilePath: String,
                          checkpointFilePath: String): RaceCourse = {
-
-    val classLoader = getClass.getClassLoader
 
     // Race route: read latitude, longitude and altitude data from csv file
     val gpsRoute: Array[Pin] =
@@ -90,6 +89,64 @@ object StrategyEngine {
                            raceCourse.pinDistances,
                            raceCourse.gpsRoute)
 
-    val (azimuths, zeniths) = Sun.findSunPositionsSPA(times, lats, lons, alts)
+    val t1 = System.currentTimeMillis()
+    val (azimuths, zeniths) = Sun.findSunPositionsGrena3(times, lats, lons, alts)
+    val t2 = System.currentTimeMillis()
+
+    println(t2-t1)
+
+    val t3 = System.currentTimeMillis()
+    val (directRadiation, diffuseRadiation) = Sun.findIrrandiance(zeniths)
+    val t4 = System.currentTimeMillis()
+
+    println(t4-t3)
+
+    val t5 = System.currentTimeMillis()
+    // Get the angles of the array with respect to the solar normal
+    val sun2Arr = PV.tiltArray(zeniths, speeds)
+    val t6 = System.currentTimeMillis()
+
+    println(t6-t5)
+
+    // FileWriter
+    val file = new File("sun2arr.csv")
+    val bw = new BufferedWriter(new FileWriter(file))
+    bw.write("index, speed, zenith, angleWithSun\n")
+    for ( i <- 0 until sun2Arr.length) {
+      val t = i + timeInitial
+      for ( j <- 0 until racePlan.length) {
+        if ( t == racePlan(j).t1 || t == racePlan(j).t2 ) {
+          bw.write(s"------------------------------------------------------\n")
+          bw.write(s"------------------------------------------------------\n")
+        }
+      }
+      val s = sun2Arr(i)
+      val z = zeniths(i)
+      val v = speeds(i)
+      bw.write(s"$t, $v, $z, $s\n")
+    }
+    bw.close()
+
+    println(file.getAbsolutePath)
+
+    //
+//
+//    z = zenith*pi/180;
+//
+//    AM = 1./( cos(z) + 0.50572 .* ((96.07995 - z) .^ (-1.6364) ));
+//    directRadiation = Sun.solarPowerExtraTerrestrial * 0.7 .^ (AM.^0.678);
+//
+//    cond = (imag(directRadiation) == 0);
+//
+//    directRadiation = abs(directRadiation.*cond);
+//    diffuseRadiation = Sun.diffuseRadiationCoeff*directRadiation;
+//
+//    Sun.dirRad = directRadiation;
+//    Sun.diffRad = diffuseRadiation;
+
+
+
+    Unit
+
   }
 }

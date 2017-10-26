@@ -7,8 +7,6 @@ lazy val root = (project in file("."))
 
 val nd4jVersion = "0.9.1"
 
-scalafmtOnCompile in ThisBuild := true
-
 libraryDependencies ++=
   Seq(
     "com.github.melrief" %% "purecsv" % "0.1.0",
