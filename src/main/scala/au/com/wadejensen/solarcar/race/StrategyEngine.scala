@@ -2,7 +2,7 @@ package au.com.wadejensen.solarcar.race
 
 import java.io.{BufferedWriter, File, FileWriter}
 
-import au.com.wadejensen.solarcar.PV
+import au.com.wadejensen.solarcar.{EV, PV}
 import au.com.wadejensen.solarcar.geography.{GeoMath, Pin, Poi, Sun}
 import purecsv.unsafe.CSVReader
 
@@ -114,6 +114,8 @@ object StrategyEngine {
     val t8 = System.currentTimeMillis()
 
     println(t8-t7)
+
+    val motorPower = EV.findMotorPower(speeds)
 
     Unit
 
