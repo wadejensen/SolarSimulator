@@ -2,7 +2,7 @@ package au.com.wadejensen.solarcar
 
 import java.util.GregorianCalendar
 
-import net.e175.klaus.solarpositioning._
+import au.com.wadejensen.solarcar.solarpositioning.{AzimuthZenithAngle, DeltaT, Grena3, SPA}
 
 object Sun {
   val diffuseRadiationCoeff = 0.1
@@ -43,6 +43,30 @@ object Sun {
     val zeniths = pos.map(_.getZenithAngle)
 
     (azimuths, zeniths)
+  }
+
+  def findSolarZenithGrena3(times: Array[Long],
+                      lats: Array[Double],
+                      lons: Array[Double],
+                      alts: Array[Double]): Array[Double] = {
+
+    Array.range(0, times.length)
+         .map( i => calculateZenithGrena3(times(i),lats(i), lons(i), lats(i)))
+  }
+
+  private def calculateZenithGrena3( time: Long,
+                                     latitude: Double,
+                                     longitude: Double,
+                                     altitude: Double) = {
+
+    var datetime = new GregorianCalendar
+    datetime.setTimeInMillis(time * 1000)
+
+    Grena3.calculateSolarZenith(
+      datetime,
+      latitude,
+      longitude,
+      DeltaT.estimate(datetime) )
   }
 
   private def calculatePositionSPA(time: Long,

@@ -95,7 +95,7 @@ object StrategyEngineTestMain extends App {
   val bw = new BufferedWriter(new FileWriter(file))
   bw.write("Speed, Final Battery, Duration, Min Battery, Max Battery, Max Motor, Max Array \n")
 
-  val raceSpeeds = List.tabulate[Double](40)( i => 50 + i )
+  val raceSpeeds = List.tabulate[Double](400)( i => 50 + i*0.1 )
 
   for ( raceSpeed <- raceSpeeds.iterator ) {
 

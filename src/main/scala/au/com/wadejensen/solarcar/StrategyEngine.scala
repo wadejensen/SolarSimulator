@@ -104,7 +104,7 @@ object StrategyEngine {
     /** --------------- Calculate the position of the sun --------------- **/
 
     val timerSunPosition1 = System.nanoTime
-    val (azimuths, zeniths) = Sun.findSunPositionsGrena3(times, lats, lons, alts)
+    val zeniths = Sun.findSolarZenithGrena3(times, lats, lons, alts)
     val timerSunPosition2 = System.nanoTime
 
     /** ---- Calculate the intensity of the sun and solar array power ---- **/

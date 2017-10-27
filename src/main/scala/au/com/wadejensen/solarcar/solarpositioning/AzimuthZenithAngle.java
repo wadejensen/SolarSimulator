@@ -1,4 +1,4 @@
-package net.e175.klaus.solarpositioning;
+package au.com.wadejensen.solarcar.solarpositioning;
 
 /**
  * A simple wrapper class for keeping an azimuth/zenith angle pair of values.

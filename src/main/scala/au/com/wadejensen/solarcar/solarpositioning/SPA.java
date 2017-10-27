@@ -1,4 +1,4 @@
-package net.e175.klaus.solarpositioning;
+package au.com.wadejensen.solarcar.solarpositioning;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
