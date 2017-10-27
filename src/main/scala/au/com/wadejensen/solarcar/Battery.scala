@@ -2,18 +2,18 @@ package au.com.wadejensen.solarcar
 
 object Battery {
 
-  val electricalEff = 0.97
+  private val electricalEff = 0.97
 
-  val numSeriesCells = 37
-  val numParallelStrings = 11
-  val nominalCellCapacity = 3.2
-  val nominalCellVoltage = 3.6
+  private val numSeriesCells = 37
+  private val numParallelStrings = 11
+  private val nominalCellCapacity = 3.2
+  private val nominalCellVoltage = 3.6
 
-  val wattHoursPerCell = nominalCellCapacity * nominalCellVoltage
-  val numCells = numSeriesCells * numParallelStrings
+  private val wattHoursPerCell = nominalCellCapacity * nominalCellVoltage
+  private val numCells = numSeriesCells * numParallelStrings
 
-  val capacityWh = wattHoursPerCell * numCells
-  val capacityJoules = capacityWh * 3600
+  private val capacityWh = wattHoursPerCell * numCells
+  private val capacityJoules = capacityWh * 3600
 
   def findNetPower(motorPower: Array[Double],
                solarPower: Array[Double]): Array[Double] = {

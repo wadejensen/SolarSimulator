@@ -16,12 +16,7 @@ import com.typesafe.config.ConfigFactory
   */
 object StrategyEngineTestMain extends App {
 
-  println("TEST TEST TEST TEST TEST TEST TEST")
-  println("TEST TEST TEST TEST TEST TEST TEST")
-  println("TEST TEST TEST TEST TEST TEST TEST")
-  println("TEST TEST TEST TEST TEST TEST TEST")
-  println("TEST TEST TEST TEST TEST TEST TEST")
-  println("TEST TEST TEST TEST TEST TEST TEST")
+  println("Running test main...")
 
   val currentTime =
     LocalDateTime.now
@@ -124,7 +119,8 @@ object StrategyEngineTestMain extends App {
         0,
         0,
         _: List[Double],
-        bw
+        bw,
+        false
       )
 
     val codeTiming = simulateRaceWithDefaults(speeds)

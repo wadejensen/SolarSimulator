@@ -69,7 +69,8 @@ object StrategyEngine {
                    codeTimingStart: Long,
                    timerRaceCourse: Long,
                    speedStrategy: List[Double],
-                   bw: BufferedWriter): CodeTiming = {
+                   bw: BufferedWriter,
+                   isLast: Boolean): CodeTiming = {
 
     /** ------ Plan when to drive and at what speed during the race ------**/
     val timerPlanRace1 = System.nanoTime
@@ -172,29 +173,32 @@ object StrategyEngine {
     val dayTime = driveTime + numCheckpoints * controlStopLength
     val averageSpeed = distances.last / dayTime * 3.6
 
-    println("----------------------------------------------------------------")
-    println(s"Solar vehicle commenced race at: $formattedStart.")
-    println(s"Solar vehicle completed race at: $formattedFinish.")
-    println(s"Race duration: $days d $hrs h $mins m $secs s.")
-    println(s"Final battery SOC: $finalBatt.")
+    if (isLast) {
+      println("----------------------------------------------------------------")
+      println(s"Solar vehicle commenced race at: $formattedStart.")
+      println(s"Solar vehicle completed race at: $formattedFinish.")
+      println(s"Race duration: $days d $hrs h $mins m $secs s.")
+      println(s"Final battery SOC: $finalBatt.")
 
-    println(s"Peak solar input: $peakSolar Watts.")
-    println(s"Peak power usage: $peakMotor Watts.")
-    println(s"Average speed: $averageSpeed km/h.")
+      println(s"Peak solar input: $peakSolar Watts.")
+      println(s"Peak power usage: $peakMotor Watts.")
+      println(s"Average speed: $averageSpeed km/h.")
 
-    if (minBatt == 0.0) println("WARNING: Battery SOC fell to 0% during the" +
-      " race. Cannot complete WSC at this speed, slow down or increase the" +
-      " battery pack size.")
-    else println(s"Lowest battery capacity reached: $minBatt%. How much " +
-      s"faster can we drive and stay above 0.0% ?\n\n")
+      if (minBatt == 0.0) println("WARNING: Battery SOC fell to 0% during the" +
+        " race. Cannot complete WSC at this speed, slow down or increase the" +
+        " battery pack size.")
+      else println(s"Lowest battery capacity reached: $minBatt%. How much " +
+        s"faster can we drive and stay above 0.0% ?\n\n")
+    }
 
+    if (bw != null) {
+      val speed = speeds.head
+      val timeLength = times.head
+      val maxBatt = soc.max
 
-    val speed = speeds.head
-    val timeLength = times.head
-    val maxBatt = soc.max
-
-    val output =s"$speed, $finalBatt, $timeLength, $minBatt, $maxBatt, $peakMotor, $peakSolar\n"
-    bw.write(output)
+      val output =s"$speed, $finalBatt, $timeLength, $minBatt, $maxBatt, $peakMotor, $peakSolar\n"
+      bw.write(output)
+    }
 
     new CodeTiming(
       t1 = codeTimingStart,

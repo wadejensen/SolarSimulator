@@ -41,7 +41,7 @@ object PV {
       .map( calculateArrayPower(_,_,_) )
   }
 
-  def calculateArrayPower( theta: Double,
+  private def calculateArrayPower( theta: Double,
                            directRadiation: Double,
                            diffuseRadiation: Double): Double = {
 

@@ -45,7 +45,7 @@ object Sun {
     (azimuths, zeniths)
   }
 
-  def calculatePositionSPA(time: Long,
+  private def calculatePositionSPA(time: Long,
                            latitude: Double,
                            longitude: Double,
                            altitude: Double): AzimuthZenithAngle = {
@@ -62,7 +62,7 @@ object Sun {
                                30)
   }
 
-  def calculatePositionGrena3(time: Long,
+  private def calculatePositionGrena3(time: Long,
                               latitude: Double,
                               longitude: Double,
                               altitude: Double): AzimuthZenithAngle = {
@@ -88,7 +88,7 @@ object Sun {
 
   }
 
-  def calculateDirectRadiance(zenith: Double): Double = {
+  private def calculateDirectRadiance(zenith: Double): Double = {
     if (zenith > 90.0) 0.0
     else {
       val z = zenith*math.Pi/180

@@ -27,14 +27,14 @@ class CodeTiming( val t1: Long,
     * @return A csv-friendly string which can be written to file cleanly.
     */
   def toString(i: Int, nanoTimeOverhead: Double): String = {
-    val totalTime = t2 - t1 - nanoCallCount * nanoTimeOverhead
-    val courseRulesTime = courseRules - nanoTimeOverhead
-    val planRaceTime = planRace - nanoTimeOverhead
-    val geospatialTime = geospatial - nanoTimeOverhead
-    val sunPositionTime = sunPosition - nanoTimeOverhead
-    val solarPowerTime = solarPower - nanoTimeOverhead
-    val motorPowerTime = motorPower - nanoTimeOverhead
-    val batteryPowerTime = batteryPower - nanoTimeOverhead
+    val totalTime = (t2 - t1 - nanoCallCount * nanoTimeOverhead) / 1000
+    val courseRulesTime = (courseRules - nanoTimeOverhead) / 1000
+    val planRaceTime = (planRace - nanoTimeOverhead) / 1000
+    val geospatialTime = (geospatial - nanoTimeOverhead) / 1000
+    val sunPositionTime = (sunPosition - nanoTimeOverhead) / 1000
+    val solarPowerTime = (solarPower - nanoTimeOverhead) / 1000
+    val motorPowerTime = (motorPower - nanoTimeOverhead) / 1000
+    val batteryPowerTime = (batteryPower - nanoTimeOverhead) / 1000
 
     // Calculate timings as a proportion of total time
     val totalTimePC = totalTime / totalTime * 100
@@ -46,15 +46,15 @@ class CodeTiming( val t1: Long,
     val motorPowerPC = motorPowerTime / totalTime * 100
     val batteryPowerPC = batteryPowerTime / totalTime * 100
 
-    s"Iteration, code section, duration (ns), duration (%)\n" +
-    s"$i, Total Time, $totalTime, $totalTimePC \n" +
-    s"$i, Course Rules, $courseRulesTime, $courseRulesPC \n" +
-    s"$i, Plan Race, $planRaceTime, $planRacePC \n" +
-    s"$i, Geospatial, $geospatialTime, $geospatialPC \n" +
-    s"$i, Sun Position, $sunPositionTime, $sunPositionPC \n" +
-    s"$i, Solar Power, $solarPowerTime, $solarPowerPC \n" +
-    s"$i, Motor Power, $motorPowerTime, $motorPowerPC \n" +
-    s"$i, Battery Power, $batteryPowerTime, $batteryPowerPC \n"
+    s"Iteration,    code section,     duration (us),        duration (%)\n"+
+    s"   $i,        Total Time,       $totalTime,   $totalTimePC \n"+
+    s"   $i,        Course Rules,     $courseRulesTime,   $courseRulesPC \n"+
+    s"   $i,        Plan Race,        $planRaceTime,    $planRacePC \n" +
+    s"   $i,        Geospatial,       $geospatialTime,    $geospatialPC \n" +
+    s"   $i,        Sun Position,     $sunPositionTime,   $sunPositionPC \n"+
+    s"   $i,        Solar Power,      $solarPowerTime,    $solarPowerPC \n" +
+    s"   $i,        Motor Power,      $motorPowerTime,    $motorPowerPC \n" +
+    s"   $i,        Battery Power,    $batteryPowerTime,    $batteryPowerPC \n"
   }
 }
 

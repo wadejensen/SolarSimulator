@@ -36,7 +36,7 @@ object Calibrator {
     * length loop.
     * @param count Number of calls to make to System.nanoTime
     */
-  def callNanoTime( count: Int): Unit = {
+  private def callNanoTime( count: Int): Unit = {
     var i = 0
     while ( i < count ) {
       i += 1

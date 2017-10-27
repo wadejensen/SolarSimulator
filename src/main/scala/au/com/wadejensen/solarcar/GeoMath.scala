@@ -91,7 +91,7 @@ object GeoMath {
     * @param dx
     * @return
     */
-  def gradient(y2: Double, y1: Double, dx: Double): Double = {
+  private def gradient(y2: Double, y1: Double, dx: Double): Double = {
     val dy = y2 - y1
     math.atan2(dy, dx)
   }
@@ -129,7 +129,7 @@ object GeoMath {
     * @param lon2 Longitude2 (radians)
     * @return
     */
-  def bearing(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double = {
+  private def bearing(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double = {
     val dLon = lon2 - lon1
 
     val bearing = math.atan2(
@@ -197,7 +197,7 @@ object GeoMath {
     *            span a distance of 5km either side to be safe
     * @return
     */
-  def fuzzyGpsBinarySearch(lat: Double,
+  private def fuzzyGpsBinarySearch(lat: Double,
                            lon: Double,
                            lats: Array[Double],
                            lons: Array[Double],
@@ -234,7 +234,7 @@ object GeoMath {
     * @return Index of a neighbour to the target within list
     *         (not guaranteed to be nearest neighbour)
     */
-  def reverseBinarySearch(start: Int = 0,
+  private def reverseBinarySearch(start: Int = 0,
                           end: Int,
                           target: Double,
                           list: Array[Double]): Int = {
@@ -296,7 +296,7 @@ object GeoMath {
     * @param y Lookup array to search for nearest matches
     * @return An array of indices in y pointing to nearest value in x
     */
-  def lookupNearests(x: Array[Double], y: Array[Double]): Array[Int] = {
+  private def lookupNearests(x: Array[Double], y: Array[Double]): Array[Int] = {
     implicit def bool2int(b: Boolean): Int = if (b) 1 else 0
 
     val m: Int = x.length

@@ -8,10 +8,11 @@ class Scheduler(val morningStartTime: Int,
                 val nightStopTime: Int,
                 val checkpointStopLength: Int) {
 
-  val secondsInDay = 24 * 60 * 60
-  val daysInRace = 10
+  private val secondsInDay = 24 * 60 * 60
+  private val daysInRace = 10
 
-  val nightStopDuration = (secondsInDay - nightStopTime) + morningStartTime
+  private val nightStopDuration =
+    (secondsInDay - nightStopTime) + morningStartTime
 
   def generateRacePlan(initialDistance: Double,
                        initialTime: Int,
@@ -73,7 +74,7 @@ class Scheduler(val morningStartTime: Int,
     racePlan.tail.to[List]
   }
 
-  def planRaceLeg(d1: Double,
+  private def planRaceLeg(d1: Double,
                   t1: Int,
                   speed: Double,
                   checkpoint: Double,
