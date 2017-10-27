@@ -26,7 +26,10 @@ object EV {
   }
 
   def findPotentialEnergy(alts: Array[Double]): Array[Double] = {
-    val deltaY = alts.sliding(2).map{ case Array(a,b) => b-a}.toArray
+    val altsOffset = alts.slice(1,alts.length-1)
+
+    val deltaY =
+      (alts, altsOffset).zipped.map( (alt, altOffset) => altOffset - alt)
     deltaY.map( _ * mass * g)
   }
 }
