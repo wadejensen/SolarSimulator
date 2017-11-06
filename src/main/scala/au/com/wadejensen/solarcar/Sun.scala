@@ -3,6 +3,7 @@ package au.com.wadejensen.solarcar
 import java.util.GregorianCalendar
 
 import au.com.wadejensen.solarcar.solarpositioning.{AzimuthZenithAngle, DeltaT, Grena3, SPA}
+import org.nd4s.Implicits._
 
 object Sun {
   val diffuseRadiationCoeff = 0.1
@@ -28,22 +29,22 @@ object Sun {
     (azimuths, zeniths)
   }
 
-  def findSunPositionsGrena3(
-      times: Array[Long],
-      lats: Array[Double],
-      lons: Array[Double],
-      alts: Array[Double]): (Array[Double], Array[Double]) = {
-
-    val pos =
-      Array.range(0, times.length)
-        .map( i => calculatePositionGrena3(times(i),lats(i), lons(i), alts(i)))
-
-
-    val azimuths = pos.map(_.getAzimuth)
-    val zeniths = pos.map(_.getZenithAngle)
-
-    (azimuths, zeniths)
-  }
+//  def findSunPositionsGrena3(
+//      times: Array[Long],
+//      lats: Array[Double],
+//      lons: Array[Double],
+//      alts: Array[Double]): (Array[Double], Array[Double]) = {
+//
+//    val pos =
+//      Array.range(0, times.length)
+//        .map( i => calculatePositionGrena3(times(i),lats(i), lons(i), alts(i)))
+//
+//
+//    val azimuths = pos.map(_.getAzimuth)
+//    val zeniths = pos.map(_.getZenithAngle)
+//
+//    (azimuths, zeniths)
+//  }
 
   def findSolarZenithGrena3(times: Array[Long],
                       lats: Array[Double],
@@ -86,21 +87,21 @@ object Sun {
                                30)
   }
 
-  private def calculatePositionGrena3(time: Long,
-                              latitude: Double,
-                              longitude: Double,
-                              altitude: Double): AzimuthZenithAngle = {
-
-    var datetime = new GregorianCalendar
-    datetime.setTimeInMillis(time * 1000)
-
-    Grena3.calculateSolarPosition(datetime,
-                                  latitude,
-                                  longitude,
-                                  DeltaT.estimate(datetime),
-                                  1010.0,
-                                  30)
-  }
+//  private def calculatePositionGrena3(time: Long,
+//                              latitude: Double,
+//                              longitude: Double,
+//                              altitude: Double): AzimuthZenithAngle = {
+//
+//    var datetime = new GregorianCalendar
+//    datetime.setTimeInMillis(time * 1000)
+//
+//    Grena3.calculateSolarPosition(datetime,
+//                                  latitude,
+//                                  longitude,
+//                                  DeltaT.estimate(datetime),
+//                                  1010.0,
+//                                  30)
+//  }
 
   def findIrrandiance(zeniths: Array[Double]):
                           (Array[Double], Array[Double]) = {
