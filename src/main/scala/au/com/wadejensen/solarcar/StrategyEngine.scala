@@ -88,10 +88,11 @@ object StrategyEngine {
 
     /** ----- Calculate when and where the car is during in the race ----- **/
     val timerGeospatial1 = System.nanoTime
-    val times = new Array[Long](speeds.length)
-    for (i <- times.indices) {
-      times(i) = t0 + timeInitial + i
-    }
+
+    // the unix timestamp for every second of the race
+    val times = Array.tabulate[Long](speeds.length)(i => t0 + timeInitial + i )
+
+
     // Cumulative sum
     val distances = speeds.scanLeft(0.0)(_ + _).tail
 

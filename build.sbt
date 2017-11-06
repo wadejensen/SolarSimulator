@@ -6,8 +6,8 @@ lazy val root = (project in file("."))
     scalaVersion := "2.12.3",
     version := "0.1.0",
     mainClass in assembly :=
-      Some("au.com.wadejensen.solarcar.main.StrategyEngineTestMain"),
-      //Some("au.com.wadejensen.solarcar.main.StrategyEngineMain"),
+      //Some("au.com.wadejensen.solarcar.main.StrategyEngineTestMain"),
+      Some("au.com.wadejensen.solarcar.main.StrategyEngineMain"),
       assemblyJarName in assembly := "solar-car-strategy-0.1-single-threaded-test.jar")
 
 val nd4jVersion = "0.9.1"

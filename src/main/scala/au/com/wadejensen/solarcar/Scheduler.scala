@@ -129,6 +129,8 @@ class Scheduler(val morningStartTime: Int,
     var speeds = Array.fill(raceDuration)(0.0)
 
     racePlan.foreach(leg => {
+      // The speeds indices start at zero. The time values start at 8:30am
+      // for a typical WSC race
       val i1 = leg.t1 - raceStart
       val i2 = leg.t2 - raceStart
 
