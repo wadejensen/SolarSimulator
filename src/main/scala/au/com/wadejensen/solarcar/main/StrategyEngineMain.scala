@@ -7,6 +7,9 @@ import java.time.format.DateTimeFormatter
 import au.com.wadejensen.solarcar.model.RaceCourse
 import au.com.wadejensen.solarcar.{Calibrator, GeoMath, StrategyEngine}
 import com.typesafe.config.ConfigFactory
+import org.nd4j.linalg.api.buffer.DataBuffer
+import org.nd4j.linalg.api.buffer.util.DataTypeUtil
+import org.nd4j.linalg.factory.Nd4j
 
 import scala.collection.immutable.HashMap
 
@@ -39,6 +42,11 @@ object StrategyEngineMain extends App {
 
   val cpus = Runtime.getRuntime.availableProcessors
   val parallelism = conf.getString("strategy-engine.parallelism")
+
+  // Initialise ND4J
+  DataTypeUtil.setDTypeForContext(DataBuffer.Type.DOUBLE)
+  println(Nd4j.getExecutioner.getEnvironmentInformation)
+  Nd4j.create(1)
 
   println(s"$cpus logical CPU cores detected.\n" +
     s"Parallelism set to $parallelism")

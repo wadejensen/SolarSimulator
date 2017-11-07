@@ -138,14 +138,29 @@ object Grena3 {
     val sEpsilon0 = sPhi * sDelta + cPhi * cDelta * cH
     val eP = asin(sEpsilon0) - sqrt(-sEpsilon0 * sEpsilon0 + 1) * 4.26e-5
 
-//    val deltaRe =
-//      if (temperature < -(273) || temperature > 273 || pressure < 0 || pressure > 3000) 0.0
-//      else if ((eP > 0.0)) {
-//        (0.08422 * (pressure / 1000)) / ((273.0 + temperature) * tan(eP + (eP + 0.08919) \ 4.26e-5))
-//      }
-//      else {
-//        0.0
-//      }
+    // convert from ND4J array to JVM
+    //val ePs = for ( i <- 0 until eP.length ) yield eP.getDouble(i)
+
+    // The original calculation for deltaRe:
+    //    val deltaRe =
+    //      if (temperature < -(273) || temperature > 273 || pressure < 0 || pressure > 3000) 0.0
+    //      else if ((eP > 0.0)) {
+    //        (0.08422 * (pressure / 1000)) / ((273.0 + temperature) * tan(eP + (eP + 0.08919) \ 4.26e-5))
+    //      }
+    //      else {
+    //        0.0
+    //      }
+
+    // But we always use a constant known temperature and pressure as an
+    // approximation. So the expression simplifies to:
+
+//    val deltaRe = ePs.map( ep => {
+//      if (ep > 0.0) (0.08422 * (pressure / 1000)) / ((273.0 + temperature) * math.tan(ep + 0.003138 / (ep + 0.08919)))
+//      else 0.0
+//    }).toArray
+
+
+
 //    val z = PI / 2 - eP - deltaRe
 //    toDegrees(z)
     Nd4j.create(1)

@@ -55,7 +55,7 @@ object Sun {
     val gregorians =
       Array.tabulate(times.length){ i =>
         val time = new GregorianCalendar()
-        time.setTimeInMillis(times(i))
+        time.setTimeInMillis(times(i) * 1000)
         time
       }
 
