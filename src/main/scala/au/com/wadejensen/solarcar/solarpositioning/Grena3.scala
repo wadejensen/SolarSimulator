@@ -2,8 +2,12 @@ package au.com.wadejensen.solarcar.solarpositioning
 
 import java.util.Calendar
 import java.util.GregorianCalendar
-import java.lang.Math._
+//import java.lang.Math._
 
+import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.factory.Nd4j
+import org.nd4j.linalg.ops.transforms.Transforms._
+import org.nd4s.Implicits._
 
 /**
   * Calculate topocentric solar position, i.e. the location of the sun on the sky for a certain point in time on a
@@ -61,34 +65,34 @@ object Grena3 {
     val t = calcT(date)
     val tE = t + 1.1574e-5 * deltaT
     val omegaAtE = 0.0172019715 * tE
-    val lambda = -1.388803 + 1.720279216e-2 * tE + 3.3366e-2 * sin(omegaAtE - 0.06172) + 3.53e-4 * sin(2.0 * omegaAtE - 0.1163)
+    val lambda = -1.388803 + 1.720279216e-2 * tE + 3.3366e-2 * math.sin(omegaAtE - 0.06172) + 3.53e-4 * math.sin(2.0 * omegaAtE - 0.1163)
     val epsilon = 4.089567e-1 - 6.19e-9 * tE
-    val sLambda = sin(lambda)
-    val cLambda = cos(lambda)
-    val sEpsilon = sin(epsilon)
-    val cEpsilon = sqrt(1 - sEpsilon * sEpsilon)
-    var alpha = atan2(sLambda * cEpsilon, cLambda)
-    if (alpha < 0) alpha += 2 * PI
-    val delta = asin(sLambda * sEpsilon)
-    var H = 1.7528311 + 6.300388099 * t + toRadians(longitude) - alpha
-    H = ((H + PI) % (2 * PI)) - PI
-    if (H < -PI) H += 2 * PI
-    val sPhi = sin(toRadians(latitude))
-    val cPhi = sqrt(1 - sPhi * sPhi)
-    val sDelta = sin(delta)
-    val cDelta = sqrt(1 - sDelta * sDelta)
-    val cH = cos(H)
+    val sLambda = math.sin(lambda)
+    val cLambda = math.cos(lambda)
+    val sEpsilon = math.sin(epsilon)
+    val cEpsilon = math.sqrt(1 - sEpsilon * sEpsilon)
+    var alpha = math.atan2(sLambda * cEpsilon, cLambda)
+    if (alpha < 0) alpha += 2 * math.Pi
+    val delta = math.asin(sLambda * sEpsilon)
+    var H = 1.7528311 + 6.300388099 * t + math.toRadians(longitude) - alpha
+    H = ((H + math.Pi) % (2 * math.Pi)) - math.Pi
+    if (H < -math.Pi) H += 2 * math.Pi
+    val sPhi = math.sin(math.toRadians(latitude))
+    val cPhi = math.sqrt(1 - sPhi * sPhi)
+    val sDelta = math.sin(delta)
+    val cDelta = math.sqrt(1 - sDelta * sDelta)
+    val cH = math.cos(H)
     val sEpsilon0 = sPhi * sDelta + cPhi * cDelta * cH
-    val eP = asin(sEpsilon0) - 4.26e-5 * sqrt(1.0 - sEpsilon0 * sEpsilon0)
+    val eP = math.asin(sEpsilon0) - 4.26e-5 * math.sqrt(1.0 - sEpsilon0 * sEpsilon0)
     val deltaRe = if (temperature < -(273) || temperature > 273 || pressure < 0 || pressure > 3000) 0.0
     else if ((eP > 0.0)) {
-      (0.08422 * (pressure / 1000)) / ((273.0 + temperature) * tan(eP + 0.003138 / (eP + 0.08919)))
+      (0.08422 * (pressure / 1000)) / ((273.0 + temperature) * math.tan(eP + 0.003138 / (eP + 0.08919)))
     }
     else {
       0.0
     }
-    val z = PI / 2 - eP - deltaRe
-    toDegrees(z)
+    val z = math.Pi / 2 - eP - deltaRe
+    math.toDegrees(z)
   }
 
   private def calcT(date: GregorianCalendar) = {
@@ -103,6 +107,50 @@ object Grena3 {
     }
     (365.25 * (y - 2000)).toInt + (30.6001 * (m + 1)).toInt - (0.01 * y).toInt + d + 0.0416667 * h - 21958
   }
+
+  def calculateSolarZenithVectorised(date: Array[GregorianCalendar],
+                           latitude: INDArray,
+                           longitude: INDArray,
+                           deltaT: Double,
+                           pressure: Double,
+                           temperature: Double): INDArray = {
+
+    val t = date.map(calcT(_)).toNDArray
+    val tE = t + 1.1574e-5 * deltaT
+    val omegaAtE = tE * 0.0172019715
+    val lambda = tE / 1.720279216e-2 -1.388803 + sin(omegaAtE - 0.06172) * 3.3366e-2 + sin(omegaAtE * 2.0 - 0.1163) * 3.53e-4
+    val epsilon = - tE * 6.19e-9 + 4.089567e-1
+    val sLambda = sin(lambda)
+    val cLambda = cos(lambda)
+    val sEpsilon = sin(epsilon)
+    val cEpsilon = sqrt(-sEpsilon * sEpsilon + 1)
+    var alpha = atan2(sLambda * cEpsilon, cLambda)
+    if (alpha < 0) alpha += 2 * math.Pi
+    val delta = asin(sLambda * sEpsilon)
+    var H = t * 6.300388099 + 1.7528311 + longitude * math.Pi / 180 - alpha
+        H = (H + math.Pi).fmod(2 * math.Pi) - math.Pi
+        if (H < -math.Pi) H += 2 * math.Pi
+    val sPhi = sin(latitude * math.Pi / 180)
+    val cPhi = sqrt(-sPhi * sPhi + 1)
+    val sDelta = sin(delta)
+    val cDelta = sqrt(-sDelta * sDelta + 1.0)
+    val cH = cos(H)
+    val sEpsilon0 = sPhi * sDelta + cPhi * cDelta * cH
+    val eP = asin(sEpsilon0) - sqrt(-sEpsilon0 * sEpsilon0 + 1) * 4.26e-5
+
+//    val deltaRe =
+//      if (temperature < -(273) || temperature > 273 || pressure < 0 || pressure > 3000) 0.0
+//      else if ((eP > 0.0)) {
+//        (0.08422 * (pressure / 1000)) / ((273.0 + temperature) * tan(eP + (eP + 0.08919) \ 4.26e-5))
+//      }
+//      else {
+//        0.0
+//      }
+//    val z = PI / 2 - eP - deltaRe
+//    toDegrees(z)
+    Nd4j.create(1)
+  }
+
 }
 
 final class Grena3 private() {
