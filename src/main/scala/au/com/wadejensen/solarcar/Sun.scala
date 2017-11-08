@@ -6,7 +6,6 @@ import au.com.wadejensen.solarcar.solarpositioning.{AzimuthZenithAngle, DeltaT, 
 import org.nd4j.linalg.api.buffer.DataBuffer
 import org.nd4j.linalg.api.buffer.util.DataTypeUtil
 import org.nd4j.linalg.api.ndarray.INDArray
-import org.nd4j.nativeblas.NativeOpsHolder
 import org.nd4s.Implicits._
 
 object Sun {
@@ -22,7 +21,8 @@ object Sun {
     val pos =
       Array.range(0, times.length)
         .map( i =>
-          calculatePositionSPA(times(i),
+          calculatePositionSPA(
+            times(i),
             latitudes(i),
             longitudes(i),
             altitudes(i)))
@@ -76,29 +76,33 @@ object Sun {
                             lons: Array[Double],
                             alts: Array[Double]): Array[Double] = {
 
+    var datetime = new GregorianCalendar
+    datetime.setTimeInMillis(times(0) * 1000)
+
+    val deltaT = DeltaT.estimate(datetime)
+
     Array.range(0, times.length)
-         .map( i => calculateZenithGrena3(times(i),lats(i), lons(i), lats(i)))
+         .map( i =>
+           calculateZenithGrena3(
+             times(i),
+             lats(i),
+             lons(i),
+             lats(i),
+             deltaT ) )
   }
 
   private def calculateZenithGrena3( time: Long,
                                      latitude: Double,
                                      longitude: Double,
-                                     altitude: Double) = {
-
-    var datetime = new GregorianCalendar
-    datetime.setTimeInMillis(time * 1000)
-
-    Grena3.calculateSolarZenith(
-      datetime,
-      latitude,
-      longitude,
-      DeltaT.estimate(datetime) )
+                                     altitude: Double,
+                                     deltaT: Double) = {
+    Grena3.calculateSolarZenith( time, latitude, longitude, deltaT )
   }
 
   private def calculatePositionSPA(time: Long,
-                           latitude: Double,
-                           longitude: Double,
-                           altitude: Double): AzimuthZenithAngle = {
+                                   latitude: Double,
+                                   longitude: Double,
+                                   altitude: Double): AzimuthZenithAngle = {
 
     var datetime = new GregorianCalendar
     datetime.setTimeInMillis(time * 1000)

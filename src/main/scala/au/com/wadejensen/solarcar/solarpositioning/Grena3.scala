@@ -49,12 +49,12 @@ object Grena3 {
     * @return Topocentric solar position (azimuth measured eastward from north)
     * @see AzimuthZenithAngle
     */
-  def calculateSolarZenith(date: GregorianCalendar,
+  def calculateSolarZenith(t: Long,
                            latitude: Double,
                            longitude: Double,
                            deltaT: Double): Double = {
     calculateSolarZenith(
-      date,
+      t,
       latitude,
       longitude,
       deltaT,
@@ -63,14 +63,14 @@ object Grena3 {
   }
 
 
-  def calculateSolarZenith(date: GregorianCalendar,
+  def calculateSolarZenith(t: Long,
                            latitude: Double,
                            longitude: Double,
                            deltaT: Double,
                            pressure: Double,
                            temperature: Double): Double = {
-    val t = calcT(date)
-    val tE = t + 1.1574e-5 * deltaT
+    val t2 = calcT(t)
+    val tE = t2 + 1.1574e-5 * deltaT
     val omegaAtE = 0.0172019715 * tE
     val lambda = -1.388803 + 1.720279216e-2 * tE + 3.3366e-2 * math.sin(omegaAtE - 0.06172) + 3.53e-4 * math.sin(2.0 * omegaAtE - 0.1163)
     val epsilon = 4.089567e-1 - 6.19e-9 * tE
@@ -102,26 +102,18 @@ object Grena3 {
     math.toDegrees(z)
   }
 
-  private def calcT2(t: Long) = {
+  /**
+    *
+    * @param t unix timestamp, this version of calcT is only valid after unix
+    *          epoch
+    * @return
+    */
+  private def calcT(t: Long) = {
     val utc = ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneId.of("Z"))
     var m = utc.getMonthValue
     var y = utc.getYear
     val d = utc.getDayOfMonth
     val h = utc.getHour + utc.getMinute / 60d + utc.getSecond / (60d * 60)
-    if (m <= 2) {
-      m += 12
-      y -= 1
-    }
-    (365.25 * (y - 2000)).toInt + (30.6001 * (m + 1)).toInt - (0.01 * y).toInt + d + 0.0416667 * h - 21958
-  }
-
-
-  private def calcT(date: GregorianCalendar) = {
-    val utc = JulianDate.createUtcCalendar(date)
-    var m = utc.get(Calendar.MONTH) + 1
-    var y = utc.get(Calendar.YEAR)
-    val d = utc.get(Calendar.DAY_OF_MONTH)
-    val h = utc.get(Calendar.HOUR_OF_DAY) + utc.get(Calendar.MINUTE) / 60d + utc.get(Calendar.SECOND) / (60d * 60)
     if (m <= 2) {
       m += 12
       y -= 1
@@ -136,7 +128,7 @@ object Grena3 {
                            pressure: Double,
                            temperature: Double): INDArray = {
 
-    val t2 = t.map(calcT2(_)).toNDArray
+    val t2 = t.map(calcT(_)).toNDArray
     val tE = t2 + 1.1574e-5 * deltaT
     val omegaAtE = tE * 0.0172019715
     //val lambda = -1.388803 + 1.720279216e-2 * tE + 3.3366e-2 * math.sin(omegaAtE - 0.06172) + 3.53e-4 * math.sin(2.0 * omegaAtE - 0.1163)
