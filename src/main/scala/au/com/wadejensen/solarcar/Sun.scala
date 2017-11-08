@@ -6,7 +6,9 @@ import au.com.wadejensen.solarcar.solarpositioning.{AzimuthZenithAngle, DeltaT, 
 import org.nd4j.linalg.api.buffer.DataBuffer
 import org.nd4j.linalg.api.buffer.util.DataTypeUtil
 import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.factory.Nd4j
 import org.nd4s.Implicits._
+import org.nd4j.linalg.ops.transforms.Transforms._
 
 object Sun {
   val diffuseRadiationCoeff = 0.1
@@ -133,13 +135,12 @@ object Sun {
 //  }
 
   def findIrrandiance(zeniths: Array[Double]):
-                          (Array[Double], Array[Double]) = {
+  (Array[Double], Array[Double]) = {
 
     val directRadiations = zeniths.map(calculateDirectRadiance(_))
     val diffuseRadiations = directRadiations.map( _ * diffuseRadiationCoeff)
 
     (directRadiations, diffuseRadiations)
-
   }
 
   private def calculateDirectRadiance(zenith: Double): Double = {
@@ -150,5 +151,20 @@ object Sun {
       // Direct radiation
       solarPowerExtraTerrestrial * math.pow(0.7, math.pow(AM,0.678) )
     }
+  }
+
+  def findIrrandianceVectorised(zenith: INDArray):
+  (INDArray, INDArray) = {
+    val z = zenith * math.Pi/180
+    val AM = ( cos(z) + pow( -z + 96.07995, -1.6364) * 0.50572 ) \ 1
+
+    val directRadiation =
+      zenith.lt(90.0) * // is the sun over the horizon ?
+        solarPowerExtraTerrestrial * // raw solar power
+        pow( Nd4j.zeros(zenith.length).addi(0.7) , pow(AM,0.678)) // atmospheric effects
+
+    val diffuseRadiation = directRadiation * diffuseRadiationCoeff
+
+    (directRadiation, diffuseRadiation)
   }
 }

@@ -1,19 +1,13 @@
 package au.com.wadejensen.solarcar.solarpositioning
 
 import java.time.{Instant, ZoneId, ZonedDateTime}
-import java.util.Calendar
-import java.util.GregorianCalendar
 
 //import java.lang.Math._
 
 import org.nd4j.linalg.api.ndarray.INDArray
-import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.ops.transforms.Transforms._
-import org.nd4j.linalg.api.ops.impl.transforms
-
 import org.nd4s.Implicits._
-import org.nd4j.linalg.indexing.conditions._
-import org.nd4j.linalg.indexing
+
 
 
 /**

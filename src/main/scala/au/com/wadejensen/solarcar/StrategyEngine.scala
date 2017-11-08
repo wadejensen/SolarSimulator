@@ -108,19 +108,22 @@ object StrategyEngine {
     val zeniths = Sun.findSolarZenithGrena3(times, lats, lons, alts)
     val timerSunPosition2 = System.nanoTime
 
-    val zenithsVectorised =
-      Sun.findSolarZenithGrena3Vectorised(times, lats, lons, alts)
+    val zenith = Sun.findSolarZenithGrena3Vectorised(times, lats, lons, alts)
 
     /** ---- Calculate the intensity of the sun and solar array power ---- **/
     val timerSolar1 = System.nanoTime
-    val (directRadiation, diffuseRadiation) = Sun.findIrrandiance(zeniths)
+    val (directRadiations, diffuseRadiations) = Sun.findIrrandiance(zeniths)
 
     // Get the angles of the array with respect to the solar normal
     val sun2Arr = PV.tiltArray(zeniths, speeds)
 
     val solarPower =
-      PV.findArrayPower(sun2Arr, directRadiation, diffuseRadiation)
+      PV.findArrayPower(sun2Arr, directRadiations, diffuseRadiations)
     val timerSolar2 = System.nanoTime
+
+    
+    val (directRadiation, diffuseRadiation) =
+      Sun.findIrrandianceVectorised(zenith)
 
     /** --------------- Calculate power usage by the motor --------------- **/
     val timerMotor1 = System.nanoTime
