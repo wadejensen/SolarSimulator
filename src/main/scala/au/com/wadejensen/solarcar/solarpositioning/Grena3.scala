@@ -150,15 +150,17 @@ object Grena3 {
 
     // The following two lines are equivalent to:
     // if (alpha < 0) alpha += 2 * math.Pi
-    val temp = alpha.cond( Conditions.lessThan(0.0) )
-    val alpha2 = alpha + temp * (2 * math.Pi)
-
-    val temp2 = alpha.lt(0.0) * (2 * math.Pi)
+    val temp = alpha.lt(0.0) * (2 * math.Pi)
+    alpha += temp
 
     val delta = asin(sLambda * sEpsilon)
-    var H = t2 * 6.300388099 + 1.7528311 + longitude * math.Pi / 180 - alpha2
+    var H = t2 * 6.300388099 + 1.7528311 + longitude * math.Pi / 180 - alpha
         H = (H + math.Pi).fmod(2 * math.Pi) - math.Pi
-        if (H < -math.Pi) H += 2 * math.Pi
+        // The following two lines are equivalent to:
+        // if (H < -math.Pi) H += 2 * math.Pi
+        val temp2 = H.lt(-math.Pi) * (2 * math.Pi)
+        H += temp2
+
     val sPhi = sin(latitude * math.Pi / 180)
     val cPhi = sqrt(-sPhi * sPhi + 1)
     val sDelta = sin(delta)
