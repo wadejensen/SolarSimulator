@@ -75,7 +75,7 @@ object Grena3 {
     var alpha = math.atan2(sLambda * cEpsilon, cLambda)
     if (alpha < 0) alpha += 2 * math.Pi
     val delta = math.asin(sLambda * sEpsilon)
-    var H = 1.7528311 + 6.300388099 * t + math.toRadians(longitude) - alpha
+    var H = 1.7528311 + 6.300388099 * t2 + math.toRadians(longitude) - alpha
     H = ((H + math.Pi) % (2 * math.Pi)) - math.Pi
     if (H < -math.Pi) H += 2 * math.Pi
     val sPhi = math.sin(math.toRadians(latitude))
