@@ -3,7 +3,10 @@ package au.com.wadejensen.solarcar
 import java.util.{Date, GregorianCalendar}
 
 import au.com.wadejensen.solarcar.solarpositioning.{AzimuthZenithAngle, DeltaT, Grena3, SPA}
+import org.nd4j.linalg.api.buffer.DataBuffer
+import org.nd4j.linalg.api.buffer.util.DataTypeUtil
 import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.nativeblas.NativeOpsHolder
 import org.nd4s.Implicits._
 
 object Sun {
@@ -52,6 +55,7 @@ object Sun {
                       lons: Array[Double],
                       alts: Array[Double]): INDArray = {
 
+    DataTypeUtil.setDTypeForContext(DataBuffer.Type.DOUBLE)
     // Estimate deltaT based on initial time
     var greg = new GregorianCalendar()
     greg.setTimeInMillis( times(0) * 1000 )

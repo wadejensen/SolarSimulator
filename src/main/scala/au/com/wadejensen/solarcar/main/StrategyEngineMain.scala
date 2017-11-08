@@ -4,14 +4,12 @@ import java.io.{BufferedWriter, File, FileWriter}
 import java.time._
 import java.time.format.DateTimeFormatter
 
-import au.com.wadejensen.solarcar.model.RaceCourse
 import au.com.wadejensen.solarcar.{Calibrator, GeoMath, StrategyEngine}
 import com.typesafe.config.ConfigFactory
 import org.nd4j.linalg.api.buffer.DataBuffer
 import org.nd4j.linalg.api.buffer.util.DataTypeUtil
 import org.nd4j.linalg.factory.Nd4j
 
-import scala.collection.immutable.HashMap
 
 /**
   * Strategy engine entry point. This main calculates the performance of
@@ -47,6 +45,9 @@ object StrategyEngineMain extends App {
   DataTypeUtil.setDTypeForContext(DataBuffer.Type.DOUBLE)
   println(Nd4j.getExecutioner.getEnvironmentInformation)
   Nd4j.create(1)
+//  DataTypeUtil.setDTypeForContext(DataBuffer.Type.FLOAT)
+//  NativeOpsHolder.getInstance().getDeviceNativeOps().setElementThreshold(100)
+//  NativeOpsHolder.getInstance().getDeviceNativeOps().setTADThreshold(64)
 
   println(s"$cpus logical CPU cores detected.\n" +
     s"Parallelism set to $parallelism")

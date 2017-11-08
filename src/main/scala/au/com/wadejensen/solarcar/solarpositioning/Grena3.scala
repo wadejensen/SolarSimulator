@@ -4,14 +4,13 @@ import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.Calendar
 import java.util.GregorianCalendar
 
-import org.nd4j.linalg.api.ops.impl.accum.MatchCondition
-import org.nd4j.linalg.indexing.BooleanIndexing
-
 //import java.lang.Math._
 
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.ops.transforms.Transforms._
+import org.nd4j.linalg.api.ops.impl.transforms
+
 import org.nd4s.Implicits._
 import org.nd4j.linalg.indexing.conditions._
 import org.nd4j.linalg.indexing
@@ -140,13 +139,17 @@ object Grena3 {
     val t2 = t.map(calcT2(_)).toNDArray
     val tE = t2 + 1.1574e-5 * deltaT
     val omegaAtE = tE * 0.0172019715
-    val lambda = tE / 1.720279216e-2 - 1.388803 + sin(omegaAtE - 0.06172) * 3.3366e-2 + sin(omegaAtE * 2.0 - 0.1163) * 3.53e-4
+    //val lambda = -1.388803 + 1.720279216e-2 * tE + 3.3366e-2 * math.sin(omegaAtE - 0.06172) + 3.53e-4 * math.sin(2.0 * omegaAtE - 0.1163)
+    val lambda = tE * 1.720279216e-2 - 1.388803 + sin(omegaAtE - 0.06172) * 3.3366e-2 + sin(omegaAtE * 2.0 - 0.1163) * 3.53e-4
     val epsilon = - tE * 6.19e-9 + 4.089567e-1
     val sLambda = sin(lambda)
     val cLambda = cos(lambda)
     val sEpsilon = sin(epsilon)
-    val cEpsilon = sqrt(-sEpsilon * sEpsilon + 1)
-    var alpha = atan2(sLambda * cEpsilon, cLambda)
+    val cEpsilon = sqrt(-(sEpsilon * sEpsilon) + 1)
+    var alpha = atan2(cLambda, sLambda * cEpsilon)
+
+//    var alpha = math.atan2(sLambda * cEpsilon, cLambda)
+//    if (alpha < 0) alpha += 2 * math.Pi
 
     // The following two lines are equivalent to:
     // if (alpha < 0) alpha += 2 * math.Pi
@@ -169,9 +172,6 @@ object Grena3 {
     val sEpsilon0 = sPhi * sDelta + cPhi * cDelta * cH
     val eP = asin(sEpsilon0) - sqrt(-sEpsilon0 * sEpsilon0 + 1) * 4.26e-5
 
-    // convert from ND4J array to JVM
-    //val ePs = for ( i <- 0 until eP.length ) yield eP.getDouble(i)
-
     // The original calculation for deltaRe:
     //    val deltaRe =
     //      if (temperature < -(273) || temperature > 273 || pressure < 0 || pressure > 3000) 0.0
@@ -184,17 +184,15 @@ object Grena3 {
 
     // But we always use a constant known temperature and pressure as an
     // approximation. So the expression simplifies to:
+    val temp3 =
+    sin(eP + (eP + 0.08919) \ 4.26e-5) /
+      cos(eP + (eP + 0.08919) \ 4.26e-5) *
+      (0.08422 * (pressure / 1000)) / (273.0 + temperature)
 
-//    val deltaRe = ePs.map( ep => {
-//      if (ep > 0.0) (0.08422 * (pressure / 1000)) / ((273.0 + temperature) * math.tan(ep + 0.003138 / (ep + 0.08919)))
-//      else 0.0
-//    }).toArray
+    val deltaRe = eP.gt(0.0) * temp3
 
-
-
-//    val z = PI / 2 - eP - deltaRe
-//    toDegrees(z)
-    Nd4j.create(1)
+    val z = - eP - deltaRe + (math.Pi / 2)
+    z * (180 / math.Pi)
   }
 
 }
