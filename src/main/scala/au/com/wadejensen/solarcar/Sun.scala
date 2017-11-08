@@ -1,6 +1,6 @@
 package au.com.wadejensen.solarcar
 
-import java.util.GregorianCalendar
+import java.util.{Date, GregorianCalendar}
 
 import au.com.wadejensen.solarcar.solarpositioning.{AzimuthZenithAngle, DeltaT, Grena3, SPA}
 import org.nd4j.linalg.api.ndarray.INDArray
@@ -52,18 +52,13 @@ object Sun {
                       lons: Array[Double],
                       alts: Array[Double]): INDArray = {
 
-    val gregorians =
-      Array.tabulate(times.length){ i =>
-        val time = new GregorianCalendar()
-        time.setTimeInMillis(times(i) * 1000)
-        time
-      }
-
     // Estimate deltaT based on initial time
-    val deltaT = DeltaT.estimate(gregorians(0))
+    var greg = new GregorianCalendar()
+    greg.setTimeInMillis( times(0) * 1000 )
+    val deltaT = DeltaT.estimate( greg )
 
     Grena3.calculateSolarZenithVectorised(
-      gregorians,
+      times,
       lats.toNDArray,
       lons.toNDArray,
       deltaT,
@@ -73,9 +68,9 @@ object Sun {
   }
 
   def findSolarZenithGrena3(times: Array[Long],
-                                      lats: Array[Double],
-                                      lons: Array[Double],
-                                      alts: Array[Double]): Array[Double] = {
+                            lats: Array[Double],
+                            lons: Array[Double],
+                            alts: Array[Double]): Array[Double] = {
 
     Array.range(0, times.length)
          .map( i => calculateZenithGrena3(times(i),lats(i), lons(i), lats(i)))

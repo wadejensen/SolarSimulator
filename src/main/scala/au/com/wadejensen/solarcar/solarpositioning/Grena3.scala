@@ -1,5 +1,6 @@
 package au.com.wadejensen.solarcar.solarpositioning
 
+import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.Calendar
 import java.util.GregorianCalendar
 //import java.lang.Math._
@@ -95,6 +96,20 @@ object Grena3 {
     math.toDegrees(z)
   }
 
+  private def calcT2(t: Long) = {
+    val utc = ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneId.of("Z"))
+    var m = utc.getMonthValue
+    var y = utc.getYear
+    val d = utc.getDayOfMonth
+    val h = utc.getHour + utc.getMinute / 60d + utc.getSecond / (60d * 60)
+    if (m <= 2) {
+      m += 12
+      y -= 1
+    }
+    (365.25 * (y - 2000)).toInt + (30.6001 * (m + 1)).toInt - (0.01 * y).toInt + d + 0.0416667 * h - 21958
+  }
+
+
   private def calcT(date: GregorianCalendar) = {
     val utc = JulianDate.createUtcCalendar(date)
     var m = utc.get(Calendar.MONTH) + 1
@@ -108,15 +123,15 @@ object Grena3 {
     (365.25 * (y - 2000)).toInt + (30.6001 * (m + 1)).toInt - (0.01 * y).toInt + d + 0.0416667 * h - 21958
   }
 
-  def calculateSolarZenithVectorised(date: Array[GregorianCalendar],
+  def calculateSolarZenithVectorised(t: Array[Long],
                            latitude: INDArray,
                            longitude: INDArray,
                            deltaT: Double,
                            pressure: Double,
                            temperature: Double): INDArray = {
 
-    val t = date.map(calcT(_)).toNDArray
-    val tE = t + 1.1574e-5 * deltaT
+    val t2 = t.map(calcT2(_)).toNDArray
+    val tE = t2 + 1.1574e-5 * deltaT
     val omegaAtE = tE * 0.0172019715
     val lambda = tE / 1.720279216e-2 -1.388803 + sin(omegaAtE - 0.06172) * 3.3366e-2 + sin(omegaAtE * 2.0 - 0.1163) * 3.53e-4
     val epsilon = - tE * 6.19e-9 + 4.089567e-1
@@ -125,9 +140,13 @@ object Grena3 {
     val sEpsilon = sin(epsilon)
     val cEpsilon = sqrt(-sEpsilon * sEpsilon + 1)
     var alpha = atan2(sLambda * cEpsilon, cLambda)
+
     if (alpha < 0) alpha += 2 * math.Pi
+
+
+
     val delta = asin(sLambda * sEpsilon)
-    var H = t * 6.300388099 + 1.7528311 + longitude * math.Pi / 180 - alpha
+    var H = t2 * 6.300388099 + 1.7528311 + longitude * math.Pi / 180 - alpha
         H = (H + math.Pi).fmod(2 * math.Pi) - math.Pi
         if (H < -math.Pi) H += 2 * math.Pi
     val sPhi = sin(latitude * math.Pi / 180)
