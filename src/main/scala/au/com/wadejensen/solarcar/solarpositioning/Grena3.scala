@@ -3,12 +3,19 @@ package au.com.wadejensen.solarcar.solarpositioning
 import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.Calendar
 import java.util.GregorianCalendar
+
+import org.nd4j.linalg.api.ops.impl.accum.MatchCondition
+import org.nd4j.linalg.indexing.BooleanIndexing
+
 //import java.lang.Math._
 
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.ops.transforms.Transforms._
 import org.nd4s.Implicits._
+import org.nd4j.linalg.indexing.conditions._
+import org.nd4j.linalg.indexing
+
 
 /**
   * Calculate topocentric solar position, i.e. the location of the sun on the sky for a certain point in time on a
@@ -133,7 +140,7 @@ object Grena3 {
     val t2 = t.map(calcT2(_)).toNDArray
     val tE = t2 + 1.1574e-5 * deltaT
     val omegaAtE = tE * 0.0172019715
-    val lambda = tE / 1.720279216e-2 -1.388803 + sin(omegaAtE - 0.06172) * 3.3366e-2 + sin(omegaAtE * 2.0 - 0.1163) * 3.53e-4
+    val lambda = tE / 1.720279216e-2 - 1.388803 + sin(omegaAtE - 0.06172) * 3.3366e-2 + sin(omegaAtE * 2.0 - 0.1163) * 3.53e-4
     val epsilon = - tE * 6.19e-9 + 4.089567e-1
     val sLambda = sin(lambda)
     val cLambda = cos(lambda)
@@ -141,12 +148,15 @@ object Grena3 {
     val cEpsilon = sqrt(-sEpsilon * sEpsilon + 1)
     var alpha = atan2(sLambda * cEpsilon, cLambda)
 
-    if (alpha < 0) alpha += 2 * math.Pi
+    // The following two lines are equivalent to:
+    // if (alpha < 0) alpha += 2 * math.Pi
+    val temp = alpha.cond( Conditions.lessThan(0.0) )
+    val alpha2 = alpha + temp * (2 * math.Pi)
 
-
+    val temp2 = alpha.lt(0.0) * (2 * math.Pi)
 
     val delta = asin(sLambda * sEpsilon)
-    var H = t2 * 6.300388099 + 1.7528311 + longitude * math.Pi / 180 - alpha
+    var H = t2 * 6.300388099 + 1.7528311 + longitude * math.Pi / 180 - alpha2
         H = (H + math.Pi).fmod(2 * math.Pi) - math.Pi
         if (H < -math.Pi) H += 2 * math.Pi
     val sPhi = sin(latitude * math.Pi / 180)
