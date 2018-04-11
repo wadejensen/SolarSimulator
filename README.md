@@ -1,7 +1,5 @@
 # SolarSimulator
 Simulator for solar vehicle race from Darwin to Adelaide written in highly non-idiomatic Scala and some Java 'borrowed' and hacked up from https://github.com/KlausBrunner/solarpositioning
-ND4J 
-(N-dimensional arrays for Java and Scala)
 
 Calculates the position of the sun, relative solar intensity and power usage of an electric engine and assesses the
 current battery capacity at all points in time.
