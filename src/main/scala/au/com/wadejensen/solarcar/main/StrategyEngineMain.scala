@@ -8,8 +8,11 @@ import au.com.wadejensen.solarcar.{Calibrator, GeoMath, StrategyEngine}
 import com.typesafe.config.ConfigFactory
 import org.nd4j.linalg.api.buffer.DataBuffer
 import org.nd4j.linalg.api.buffer.util.DataTypeUtil
+import org.nd4j.linalg.api.complex.IComplexNDArray
+import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
-
+import org.nd4j.linalg.ops.transforms.Transforms._
+import org.nd4s.Implicits._
 
 /**
   * Strategy engine entry point. This main calculates the performance of
@@ -23,6 +26,12 @@ import org.nd4j.linalg.factory.Nd4j
   * All simulation calculations are performed using a one second time step.
   */
 object StrategyEngineMain extends App {
+
+
+  val x = Nd4j.createComplex(Array(1,2,3,4,5,6,7,8,9,10).toNDArray)
+  val y: IComplexNDArray = Nd4j.createComplex(Array(2,2,2,2,2,2,2,2,2,2).toNDArray)
+
+  val z =
 
   val currentTime =
     LocalDateTime.now

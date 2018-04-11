@@ -55,7 +55,7 @@ object Sun {
   def findSolarZenithGrena3Vectorised(times: Array[Long],
                       lats: Array[Double],
                       lons: Array[Double],
-                      alts: Array[Double]): INDArray = {
+                      alts: Array[Double]): Array[Double] = {
 
     DataTypeUtil.setDTypeForContext(DataBuffer.Type.DOUBLE)
     // Estimate deltaT based on initial time
@@ -153,18 +153,22 @@ object Sun {
     }
   }
 
-  def findIrrandianceVectorised(zenith: INDArray):
-  (INDArray, INDArray) = {
-    val z = zenith * math.Pi/180
-    val AM = ( cos(z) + pow( -z + 96.07995, -1.6364) * 0.50572 ) \ 1
-
-    val directRadiation =
-      zenith.lt(90.0) * // is the sun over the horizon ?
-        solarPowerExtraTerrestrial * // raw solar power
-        pow( Nd4j.zeros(zenith.length).addi(0.7) , pow(AM,0.678)) // atmospheric effects
-
-    val diffuseRadiation = directRadiation * diffuseRadiationCoeff
-
-    (directRadiation, diffuseRadiation)
-  }
+//  def findIrrandianceVectorised(zenith: INDArray):
+//  (INDArray, INDArray) = {
+//    val z = zenith * math.Pi/180
+//    val AM = ( cos(z) + pow( -z + 96.07995, -1.6364) * 0.50572 ) \ 1
+//
+//    val test1 = pow( Nd4j.scalar(0.7), pow(AM.getScalar(0),0.678) )
+//    val test2 = math.pow( 0.7, math.pow(AM.getDouble(0),0.678) )
+//
+//
+//    val directRadiation =
+//      zenith.lt(90.0) * // is the sun over the horizon ?
+//        solarPowerExtraTerrestrial * // raw solar power
+//        pow( Nd4j.zeros(zenith.length).addi(0.7) , pow(AM,0.678) ) // atmospheric effects
+//
+//    val diffuseRadiation = directRadiation * diffuseRadiationCoeff
+//
+//    (directRadiation, diffuseRadiation)
+//  }
 }

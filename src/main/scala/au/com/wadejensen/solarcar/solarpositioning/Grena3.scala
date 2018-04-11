@@ -115,12 +115,13 @@ object Grena3 {
     (365.25 * (y - 2000)).toInt + (30.6001 * (m + 1)).toInt - (0.01 * y).toInt + d + 0.0416667 * h - 21958
   }
 
-  def calculateSolarZenithVectorised(t: Array[Long],
+  def calculateSolarZenithVectorised(
+                           t: Array[Long],
                            latitude: INDArray,
                            longitude: INDArray,
                            deltaT: Double,
                            pressure: Double,
-                           temperature: Double): INDArray = {
+                           temperature: Double): Array[Double] = {
 
     val t2 = t.map(calcT(_)).toNDArray
     val tE = t2 + 1.1574e-5 * deltaT
@@ -178,9 +179,9 @@ object Grena3 {
     val deltaRe = eP.gt(0.0) * temp3
 
     val z = - eP - deltaRe + (math.Pi / 2)
-    z * (180 / math.Pi)
+    val zenith = z * (180 / math.Pi)
+    (for ( i <- 0 until zenith.length ) yield {zenith.getDouble(i)}).toArray
   }
-
 }
 
 final class Grena3 private() {
