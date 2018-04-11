@@ -18,8 +18,11 @@ https://nd4j.org/
 
 ND4J makes JNI calls to C++ and passes around off-heap byte buffers using https://github.com/bytedeco/javacpp.
 In the solar simulator application I achieved 2 - 2.5X performance improvement on a single thread, either due to the performance
-of C++ vs Java / Scala, or simply because raw C++ arrays have less overhead and therefore I was seeing fewer caches misses.
+of C++ vs Java / Scala, or simply because raw C++ arrays have less memory overhead and therefore I was seeing fewer caches misses.
 
-Unfortunately the overhead of going between on-heap JVM objects and off-heap C++ arrays using ND4J ended up outweighing the performance
+Unfortunately the process of going between on-heap JVM objects and off-heap C++ arrays using ND4J ended up outweighing the performance
 benefit if you need to go back and forth more than once. Which unfortunately I did, as the NDArray 'dataframe' did not have 
 all the operators I required.
+
+I blame inefficient Java object serialisation for the conversion cost, so maybe I can take a page out of Spark's book and steal 
+some optimised serialisers (better than Kryo) and submit a patch to ND4J.
